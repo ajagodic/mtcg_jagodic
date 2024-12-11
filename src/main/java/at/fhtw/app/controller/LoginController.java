@@ -13,7 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class LoginController extends AbstractService implements RestController {
     private UserService userService;
-    boolean success;
 
     public LoginController(UserService userService) {
         this.userService = userService;

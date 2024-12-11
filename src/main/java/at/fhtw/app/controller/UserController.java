@@ -36,7 +36,7 @@ public class UserController implements RestController {
     }
 
     private Response handleRegistration(Request request) throws JsonProcessingException {
-        // JSON-Daten aus dem Request-Body lesen
+
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
         boolean success = userService.registerUser(user);
         if (success) {
@@ -47,7 +47,7 @@ public class UserController implements RestController {
     }
 
     private Response handleLogin(Request request) throws JsonProcessingException {
-        // JSON-Daten aus dem Request-Body lesen
+
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
         String token = userService.loginUser(user.getUsername(), user.getPassword());
         if (token != null) {
@@ -55,6 +55,15 @@ public class UserController implements RestController {
         } else {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Invalid username or password\"}");
         }
+    }
+    private Response manageCards(Request request) throws JsonProcessingException {
+        return null;
+    }
+    private Response buyPackage(Request request) throws JsonProcessingException {
+        return null;
+    }
+    private Response defineDeck(Request request) throws JsonProcessingException {
+        return null;
     }
 }
 
