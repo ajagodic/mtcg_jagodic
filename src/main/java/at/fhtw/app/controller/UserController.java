@@ -56,27 +56,24 @@ public class UserController implements RestController {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Invalid username or password\"}");
         }
     }
-    public Response buyPackage(int userId, int packageId) {
-        try {
-            // Benutzer aus dem Service abrufen
-            User user = userService.getUserById(userId);
-
-            // Paket kaufen
-            packageService.buyPackage(user, packageId);
-
-            return ResponseEntity.ok("Package purchased successfully!");
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    /*private Response handleNameEdit(Request request) throws JsonProcessingException {
+        User user = new ObjectMapper().readValue(request.getBody(), User.class);
+        boolean success = userService.editName(user.getUsername(), u)
+        if (success) {
+            return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
+        } else {
+            return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
         }
-    }
-    private Response manageCards(Request request) throws JsonProcessingException {
-        return null;
-    }
+    }*/
+    /*private Response handleNameEdit(Request request) throws JsonProcessingException {
+        User user = new ObjectMapper().readValue(request.getBody(), User.class);
+        boolean success = userService.editName(user.getUsername(), u)
+        if (success) {
+            return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
+        } else {
+            return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
+        }
+    }*/
 
-    private Response defineDeck(Request request) throws JsonProcessingException {
-        return null;
-    }
 }
 
