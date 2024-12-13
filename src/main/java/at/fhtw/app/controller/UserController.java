@@ -56,6 +56,7 @@ public class UserController implements RestController {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Invalid username or password\"}");
         }
     }
+
     /*private Response handleNameEdit(Request request) throws JsonProcessingException {
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
         boolean success = userService.editName(user.getUsername(), u)

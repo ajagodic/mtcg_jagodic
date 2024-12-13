@@ -48,5 +48,11 @@ public class UserService extends AbstractService {
             return true;
         }
     }
+    public String displayStats(User user){
+        if(userRepository.findByUsername(user.getUsername()) != null){
+            return userRepository.showStats(user.getUsername());
+        }
+        return "false";
+    }
 
 }

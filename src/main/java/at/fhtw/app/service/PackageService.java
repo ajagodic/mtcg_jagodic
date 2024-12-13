@@ -2,14 +2,14 @@ package at.fhtw.app.service;
 
 
 import at.fhtw.app.model.Package;
-import at.fhtw.app.persistence.repository.PackageRepository;
+import at.fhtw.app.persistence.repository.PackageRepositoryImpl;
 
 import java.util.List;
 
 public class PackageService {
-    private final PackageRepository packageRepository;
+    private final PackageRepositoryImpl packageRepository;
 
-    public PackageService(PackageRepository packageRepository) {
+    public PackageService(PackageRepositoryImpl packageRepository) {
         this.packageRepository = packageRepository;
     }
 
@@ -28,7 +28,8 @@ public class PackageService {
             throw new Exception("Failed to retrieve packages: " + e.getMessage(), e);
         }
     }
-    public void buyPackage(String userId) throws Exception {
+    public void aquirePackage(String userId) throws Exception {
+
         //
     }
 }
