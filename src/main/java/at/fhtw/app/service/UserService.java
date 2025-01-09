@@ -38,6 +38,7 @@ public class UserService extends AbstractService {
         }else{
             userRepository.editUsername(newUsername, oldUsername);
         }
+        return true;
     }
     public boolean editPassword(String username, String password){
         User user = userRepository.findByUsername(username);

@@ -1,31 +1,22 @@
 package at.fhtw.app.model;
 
+import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
+@Setter
+@Getter
 public class Package {
-    @Setter
+    // Getters and Setters
     private String id;
-    @Setter
-    private List<Card> cards; // Card is a model for individual cards
-    private int price = 5; // Default price for a package
+    private String name;
+    private List<Card> cards; // Assume Card is another model in your application
 
-    public Package(String id, List<Card> cards) {
+    public Package(String id, String name, List<Card> cards) {
         this.id = id;
+        this.name = name;
         this.cards = cards;
     }
 
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public List<Card> getCards() {
-        return cards;
-    }
-
-    public int getPrice() {
-        return price;
-    }
 }

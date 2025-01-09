@@ -1,62 +1,74 @@
 package at.fhtw.app.persistence.repository;
 
 import at.fhtw.app.model.Package;
-import java.sql.*;
+import at.fhtw.app.model.User;
+import at.fhtw.app.persistence.DataAccessException;
+import at.fhtw.app.persistence.UnitOfWork;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import at.fhtw.app.model.Card;
-import at.fhtw.app.persistence.DataAccessException;
 
 public class PackageRepositoryImpl implements PackageRepository {
-    private final Connection connection;
+    private final UnitOfWork unitOfWork;
 
-    public PackageRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    public PackageRepositoryImpl(UnitOfWork unitOfWork) {
+        this.unitOfWork = unitOfWork;
     }
 
     @Override
-    public void createPackage(Package pkg){
-        String query = "INSERT INTO packages (id, cards, price) VALUES (?, ?, ?)";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, pkg.getId());
-            statement.setString(2, serializeCards(pkg.getCards())); // Convert list to JSON or String
-            statement.setInt(3, pkg.getPrice());
-            statement.executeUpdate();
+    public void createPackage(Package pkg) throws Exception {
+        String sql = "INSERT INTO packages (id, name) VALUES (?, ?)";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, pkg.getId());
+            stmt.setString(2, pkg.getName());
+            stmt.executeUpdate();
+            unitOfWork.commitTransaction();
         } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
             throw new DataAccessException("Error creating package", e);
         }
     }
 
     @Override
-    public List<java.lang.Package> getAllPackages(){
-        String query = "SELECT * FROM packages";
+    public List<Package> getAllPackages() throws Exception {
+        String sql = "SELECT * FROM packages";
         List<Package> packages = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 packages.add(new Package(
                         rs.getString("id"),
-                        deserializeCards(rs.getString("cards")) // Convert back to List<Card>
+                        rs.getString("name"),
+                        new ArrayList<>()
                 ));
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error creating package", e);
+            throw new DataAccessException("Error fetching packages", e);
         }
         return packages;
     }
 
     @Override
-    public String serializePackage(java.lang.Package pack) {
-        return "";
+    public void removePackage(String packageId) throws Exception {
+        String sql = "DELETE FROM packages WHERE id = ?";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, packageId);
+            stmt.executeUpdate();
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error removing package", e);
+        }
     }
 
-    private String serializeCards(List<Card> cards) {
-        // Serialize cards to JSON (use a library like Jackson)
-        return "";
+    @Override
+    public int getCoinsForUser(User user) throws Exception {
+        return user.getCoins();
     }
 
-    private List<Card> deserializeCards(String cardsJson) {
-        // Deserialize JSON to List<Card>
-        return new ArrayList<>();
-    }
+
+
 }

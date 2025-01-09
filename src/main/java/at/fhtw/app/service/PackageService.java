@@ -1,16 +1,18 @@
 package at.fhtw.app.service;
 
-
 import at.fhtw.app.model.Package;
-import at.fhtw.app.persistence.repository.PackageRepositoryImpl;
+import at.fhtw.app.persistence.repository.PackageRepository;
+import at.fhtw.app.persistence.repository.UserRepository;
 
 import java.util.List;
 
 public class PackageService {
-    private final PackageRepositoryImpl packageRepository;
+    private final PackageRepository packageRepository;
+    private final UserRepository userRepository;
 
-    public PackageService(PackageRepositoryImpl packageRepository) {
+    public PackageService(PackageRepository packageRepository, UserRepository userRepository) {
         this.packageRepository = packageRepository;
+        this.userRepository = userRepository;
     }
 
     public void createPackage(Package pkg) throws Exception {
@@ -19,18 +21,29 @@ public class PackageService {
         }
         packageRepository.createPackage(pkg);
     }
-    public List<Package> getAllPackages() throws Exception {
-        try {
-            // Abrufen aller Pakete aus dem Repository
-            return packageRepository.getAllPackages();
-        } catch (Exception e) {
-            // Fehlerbehandlung für Datenbank- oder andere Fehler
-            throw new Exception("Failed to retrieve packages: " + e.getMessage(), e);
-        }
-    }
-    public void aquirePackage(String userId) throws Exception {
 
-        //
+    public List<Package> acquirePackage(String username) throws Exception {
+        // Überprüfen, ob Pakete verfügbar sind
+        List<Package> availablePackages = packageRepository.getAllPackages();
+
+        if (availablePackages.isEmpty()) {
+            throw new Exception("No packages available.");
+        }
+
+        // Benutzer-Coins abfragen
+        int userCoins = userRepository.getCoins(username);
+
+        if (userCoins < 5) {
+            throw new Exception("Not enough coins to purchase a package.");
+        }
+
+        // Paket erwerben
+        //Package acquiredPackage = availablePackages[0];
+        userRepository.updateCoins(username, userCoins - 5); // Coins abziehen
+        userRepository.addPackageToUser(username, availablePackages.getFirst()); // Paket dem Benutzer hinzufügen
+        packageRepository.removePackage(availablePackages.get(0).getId()); // Paket aus Repository entfernen
+
+        return List.of(availablePackages.getFirst()); // Rückgabe des erworbenen Pakets
     }
 }
 
