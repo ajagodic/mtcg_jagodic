@@ -17,16 +17,14 @@ public class UserRepositoryImpl implements UserRepository {
         this.unitOfWork = unitOfWork;
     }
 
-    //GET
     @Override
     public User findByUsername(String username) {
         String sql = "UPDATE users SET token = ? WHERE username = ?";
 
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
-            statement.setString(1, username + "mtcgToken");       // Setze den neuen Token-Wert
-            statement.setString(2, username);   // Setze den Username zur Übereinstimmung
-            int rowsUpdated = statement.executeUpdate(); // Führt das Update aus und gibt die betroffenen Zeilen zurück
-
+            statement.setString(1, username + "mtcgToken");
+            statement.setString(2, username);
+            int rowsUpdated = statement.executeUpdate();
             if (rowsUpdated > 0) {
                 System.out.println("Token erfolgreich aktualisiert.");
             } else {
@@ -38,10 +36,9 @@ public class UserRepositoryImpl implements UserRepository {
             unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
             e.printStackTrace();
         }
-        return null; // Benutzer nicht gefunden
+        return null;
     }
-
-    //POST
+    
     @Override
     public void saveUser(User user) {
         String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
@@ -90,12 +87,12 @@ public class UserRepositoryImpl implements UserRepository {
     //GET
     @Override
     public String showStats(String username) {
-        String sql = "SELECT elo FROM users WHERE username = ?";
+        String sql = "SELECT elo,token FROM users WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo");
+                    return "ELO: " + rs.getInt("elo") + "Token: " + rs.getString("token");
                 }
             }
         } catch (SQLException e) {

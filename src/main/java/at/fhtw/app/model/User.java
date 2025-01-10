@@ -2,12 +2,14 @@ package at.fhtw.app.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class User {
     @JsonAlias({"Username"})
     private String username;
@@ -21,9 +23,6 @@ public class User {
     private ArrayList<Card> deck;
 
 
-    public User(){
-
-    }
 
     public User(String username, String password) {
         this.username = username;

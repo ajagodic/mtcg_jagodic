@@ -36,9 +36,6 @@ public class PackageService {
         if (userCoins < 5) {
             throw new Exception("Not enough coins to purchase a package.");
         }
-
-        // Paket erwerben
-        //Package acquiredPackage = availablePackages[0];
         userRepository.updateCoins(username, userCoins - 5); // Coins abziehen
         userRepository.addPackageToUser(username, availablePackages.getFirst()); // Paket dem Benutzer hinzufügen
         packageRepository.removePackage(availablePackages.get(0).getId()); // Paket aus Repository entfernen

@@ -51,7 +51,7 @@ public class TradingRepositoryImpl implements TradingRepository {
     }
 
     public void deleteTradingOffer(String offerId) throws Exception {
-        String sql = "DELETE FROM trading_offers WHERE id = ?";
+        String sql = "DELETE FROM trades WHERE id = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, offerId);
             stmt.executeUpdate();
