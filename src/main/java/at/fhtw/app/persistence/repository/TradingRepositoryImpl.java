@@ -50,14 +50,14 @@ public class TradingRepositoryImpl implements TradingRepository {
         return offers;
     }
 
-    public void deleteTradingOffer(String offerId) throws Exception {
+    public boolean deleteTradingOffer(String offerId) throws Exception {
         String sql = "DELETE FROM trades WHERE id = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, offerId);
             stmt.executeUpdate();
             unitOfWork.commitTransaction();
+            return true;
         } catch (SQLException e) {
-            unitOfWork.rollbackTransaction();
             throw new Exception("Error deleting trading offer", e);
         }
     }

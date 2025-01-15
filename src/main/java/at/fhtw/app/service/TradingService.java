@@ -20,18 +20,18 @@ public class TradingService {
         return tradingRepository.getAllTradingOffers();
     }
 
-    public void deleteTradingOffer(String offerId, String username) throws Exception {
+    public boolean deleteTradingOffer(String offerId) throws Exception {
         // Sicherstellen, dass der Benutzer der Besitzer des Angebots ist
         List<Trade> offers = tradingRepository.getAllTradingOffers();
         Trade offer = offers.stream()
-                .filter(o -> o.getId().equals(offerId) && o.getOwner().equals(username))
+                .filter(o -> o.getId().equals(offerId))
                 .findFirst()
                 .orElseThrow(() -> new Exception("Offer not found or not owned by user"));
 
-        tradingRepository.deleteTradingOffer(offerId);
+        return tradingRepository.deleteTradingOffer(offerId);
     }
 
-    public void acceptTradingOffer(String offerId, String status) throws Exception {
+    /*public void acceptTradingOffer(String offerId, String status) throws Exception {
         List<Trade> offers = tradingRepository.getAllTradingOffers();
         Trade offer = offers.stream()
                 .filter(o -> o.getId().equals(offerId))
@@ -44,5 +44,5 @@ public class TradingService {
 
         // Tausch durchführen (Karten zwischen Benutzern tauschen)
         // Logik zum Aktualisieren der Kartenbesitz-Zuordnungen
-    }
+    }*/
 }

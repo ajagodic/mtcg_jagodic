@@ -1,5 +1,6 @@
 package at.fhtw.app.controller;
 
+import at.fhtw.httpserver.server.HttpMethod;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import at.fhtw.app.model.Package;
@@ -24,13 +25,13 @@ public class PackageController extends AbstractService implements RestController
 
     @Override
     public Response handleRequest(Request request) {
+        String path = request.getPathname();
+        HttpMethod method = request.getMethod();
         try {
-            if (request.getMethod() == Method.POST) {
-                if ("/packages".equals(request.getPathname())) {
+            if (path.equals("/packages") && method.equals(HttpMethod.POST)) {
                     return createPackage(request);
                 } else if ("/transactions/packages".equals(request.getPathname())) {
                     return acquirePackage(request);
-                }
             }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
@@ -41,10 +42,8 @@ public class PackageController extends AbstractService implements RestController
 
     private Response createPackage(Request request) {
         try {
-            // Parse the request body into a Package object
             List<Package> packages = parseJsonArray(request.getBody(), Package.class);
 
-            // Save the packages using the service
             packageService.createPackage(packages.getFirst());
 
             return new Response(HttpStatus.CREATED, ContentType.JSON,

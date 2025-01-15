@@ -2,11 +2,14 @@ package at.fhtw.httpserver.server;
 
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-
+@Setter
+@Getter
 public class Response {
     private int status;
     private String message;

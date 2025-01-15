@@ -6,6 +6,7 @@ import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
 import at.fhtw.httpserver.http.Method;
+import at.fhtw.httpserver.server.HttpMethod;
 import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.httpserver.server.RestController;
@@ -20,14 +21,15 @@ public class LoginController extends AbstractService implements RestController {
 
     @Override
     public Response handleRequest(Request request) {
-        if (request.getMethod() == Method.POST && "/sessions".equals(request.getPathname())) {
+        String path = request.getPathname();
+        HttpMethod method = request.getMethod();
+        if (path.equals("/sessions") && method.equals(HttpMethod.POST)) {
             try {
                 User user = this.getObjectMapper().readValue(request.getBody(), User.class);
                 String token = userService.loginUser(user.getUsername(),user.getPassword());
                 return new Response(HttpStatus.ACCEPTED, ContentType.JSON, "{\"Token\": \"%s\"}".formatted(token));
                     //return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"Login error\"}");
             } catch (JsonProcessingException e) {
-                // Fehler bei der Verarbeitung von JSON
                 return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid JSON format\"}");
             }
         }

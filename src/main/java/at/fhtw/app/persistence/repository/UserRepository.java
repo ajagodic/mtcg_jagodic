@@ -7,8 +7,7 @@ import at.fhtw.app.model.Package;
 public interface UserRepository {
     User findByUsername(String username);
     void saveUser(User user);
-    boolean editUsername(String username, String newUsername);
-    boolean editPassword(String username, String newPassword);
+    boolean editUserData(String username, String newUsername);
     String showStats(String username);
     int getCoins(String username);
     void updateCoins(String username, int coins);

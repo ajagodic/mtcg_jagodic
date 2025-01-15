@@ -5,7 +5,7 @@ import at.fhtw.app.service.AbstractService;
 import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
-import at.fhtw.httpserver.http.Method;
+import at.fhtw.httpserver.server.HttpMethod;
 import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.httpserver.server.RestController;
@@ -20,13 +20,13 @@ public class StatsController extends AbstractService implements RestController {
 
     @Override
     public Response handleRequest(Request request) {
+        String path = request.getPathname();
+        HttpMethod method = request.getMethod();
         try {
-            if (request.getMethod() == Method.POST) {
-                if ("/users".equals(request.getPathname())) {
-                    return null;
-                } else if ("/stats".equals(request.getPathname())) {
+            if (path.equals("/stats") && method == HttpMethod.GET) {
+                return handleStatsboard(request);
+            } else if ("/stats".equals(request.getPathname())) {
                     return handleStatsboard(request);
-                }
             }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {

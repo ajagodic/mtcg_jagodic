@@ -31,23 +31,14 @@ public class UserService extends AbstractService {
         }
         return null; // Login fehlgeschlagen
     }
-    public boolean editName(String newUsername, String oldUsername){
-        User user = userRepository.findByUsername(newUsername);
-        if(user == null){
+    public boolean editName(String name, String newName) {
+        User user = userRepository.findByUsername(name);
+        if (user == null) {
             return false;
-        }else{
-            userRepository.editUsername(newUsername, oldUsername);
+        } else {
+            userRepository.editUserData(name, newName);
         }
         return true;
-    }
-    public boolean editPassword(String username, String password){
-        User user = userRepository.findByUsername(username);
-        if(user == null){
-            return false;
-        }else{
-            userRepository.editUsername(username, password);
-            return true;
-        }
     }
     public String displayStats(User user){
         if(userRepository.findByUsername(user.getUsername()) != null){

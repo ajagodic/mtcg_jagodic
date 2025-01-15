@@ -7,5 +7,5 @@ import java.util.List;
 public interface TradingRepository {
     void createTradingOffer(Trade offer) throws Exception;
     List<Trade> getAllTradingOffers() throws Exception;
-    void deleteTradingOffer(String id) throws Exception;
+    boolean deleteTradingOffer(String id) throws Exception;
 }

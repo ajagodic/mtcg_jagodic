@@ -53,34 +53,19 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     //POST
+    //name
     @Override
-    public boolean editUsername(String username, String newUsername) {
-        String sql = "UPDATE users SET username = ? WHERE username = ?";
+    public boolean editUserData(String name, String newName) {
+        String sql = "UPDATE users SET name = ? WHERE name = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
-            stmt.setString(1, newUsername);
-            stmt.setString(2, username);
+            stmt.setString(1, newName);
+            stmt.setString(2, name);
             int rowsUpdated = stmt.executeUpdate();
             unitOfWork.commitTransaction();
             return rowsUpdated > 0;
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
             throw new DataAccessException("Error editing username", e);
-        }
-    }
-
-    //POST
-    @Override
-    public boolean editPassword(String username, String newPassword) {
-        String sql = "UPDATE users SET password = ? WHERE username = ?";
-        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
-            stmt.setString(1, newPassword);
-            stmt.setString(2, username);
-            int rowsUpdated = stmt.executeUpdate();
-            unitOfWork.commitTransaction();
-            return rowsUpdated > 0;
-        } catch (SQLException e) {
-            unitOfWork.rollbackTransaction();
-            throw new DataAccessException("Error editing password", e);
         }
     }
 

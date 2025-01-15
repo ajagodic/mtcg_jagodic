@@ -4,7 +4,7 @@ import at.fhtw.app.model.User;
 import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
-import at.fhtw.httpserver.http.Method;
+import at.fhtw.httpserver.server.HttpMethod;
 import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.httpserver.server.RestController;
@@ -20,13 +20,15 @@ public class UserController implements RestController {
 
     @Override
     public Response handleRequest(Request request) {
+        String path = request.getPathname();
+        HttpMethod method = request.getMethod();
         try {
-            if (request.getMethod() == Method.POST) {
-                if ("/users".equals(request.getPathname())) {
-                    return handleRegistration(request);
-                } else if ("/sessions".equals(request.getPathname())) {
-                    return handleLogin(request);
-                }
+            if (path.equals("/users") && method.equals(HttpMethod.POST)) {
+                return handleRegistration(request);
+            } else if (path.equals("/sessions") && method.equals(HttpMethod.POST)) {
+                return handleLogin(request);
+            } else if (path.equals("/users") && method.equals(HttpMethod.PUT)){
+                //return handleUserUpdate(request);
             }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
@@ -57,24 +59,15 @@ public class UserController implements RestController {
         }
     }
 
-    /*private Response handleNameEdit(Request request) throws JsonProcessingException {
+    private Response handleUserUpdate(Request request) throws JsonProcessingException {
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        boolean success = userService.editName(user.getUsername(), u)
+        boolean success = userService.editName(user.getUsername(), request.getBody());
         if (success) {
             return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
         } else {
             return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
         }
-    }*/
-    /*private Response handleNameEdit(Request request) throws JsonProcessingException {
-        User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        boolean success = userService.editName(user.getUsername(), u)
-        if (success) {
-            return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
-        } else {
-            return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
-        }
-    }*/
+    }
 
 }
 

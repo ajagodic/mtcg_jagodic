@@ -28,7 +28,6 @@ public class Main {
         router.addService("/sessions", new LoginController(new UserService()));
         //router.adService("/packages", new PackageController(new PackageService());
         router.addService("/stats", new UserController(new UserService()));
-
         return router;
     }
 }
