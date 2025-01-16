@@ -31,7 +31,7 @@ public class TradingService {
         return tradingRepository.deleteTradingOffer(offerId);
     }
 
-    /*public void acceptTradingOffer(String offerId, String status) throws Exception {
+    public void acceptTradingOffer(String offerId, String status) throws Exception {
         List<Trade> offers = tradingRepository.getAllTradingOffers();
         Trade offer = offers.stream()
                 .filter(o -> o.getId().equals(offerId))
@@ -44,5 +44,5 @@ public class TradingService {
 
         // Tausch durchführen (Karten zwischen Benutzern tauschen)
         // Logik zum Aktualisieren der Kartenbesitz-Zuordnungen
-    }*/
+    }
 }

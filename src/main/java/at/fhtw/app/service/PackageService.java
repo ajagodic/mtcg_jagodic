@@ -15,12 +15,21 @@ public class PackageService {
         this.userRepository = userRepository;
     }
 
-    public void createPackage(Package pkg) throws Exception {
+    public void createPackage(String token, Package pkg) throws Exception {
+        if (!isAdminToken(token)) {
+            throw new Exception("Only admins can create packages.");
+        }
+
         if (pkg.getCards().size() != 5) {
             throw new Exception("A package must contain exactly 5 cards.");
         }
         packageRepository.createPackage(pkg);
     }
+
+    private boolean isAdminToken(String token) {
+        return token != null && token.startsWith("admin");
+    }
+
 
     public List<Package> acquirePackage(String username) throws Exception {
         // Überprüfen, ob Pakete verfügbar sind

@@ -42,18 +42,29 @@ public class PackageController extends AbstractService implements RestController
 
     private Response createPackage(Request request) {
         try {
+            // Header auslesen
+            String token = request.getHeader("Authorization");
+            if (token == null || token.isEmpty()) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON,
+                        "{\"message\": \"Authorization token is missing\"}");
+            }
+
+            // JSON-Daten aus der Anfrage parsen
             List<Package> packages = parseJsonArray(request.getBody(), Package.class);
 
-            packageService.createPackage(packages.getFirst());
+            // Paket erstellen
+            packageService.createPackage(token, packages.get(0));
 
             return new Response(HttpStatus.CREATED, ContentType.JSON,
-                    "{\"message\": \"Packages created successfully\"}");
+                    "{\"message\": \"Package created successfully\"}");
         } catch (Exception e) {
             e.printStackTrace();
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON,
-                    "{\"message\": \"Error creating packages\"}");
+                    "{\"message\": \"Error creating package: " + e.getMessage() + "\"}");
         }
     }
+
+
 
     private Response acquirePackage(Request request) {
         try {

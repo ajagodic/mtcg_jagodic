@@ -22,6 +22,9 @@ public class Request {
 
         return '/' + this.pathParts.get(0);
     }
+    public String getHeader(String headerName) {
+        return this.headerMap.getHeader(headerName);
+    }
 
     public String getUrlContent(){
         return this.urlContent;
