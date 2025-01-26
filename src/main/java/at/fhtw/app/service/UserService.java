@@ -1,12 +1,9 @@
 package at.fhtw.app.service;
 
-import at.fhtw.app.model.Card;
 import at.fhtw.app.model.User;
 import at.fhtw.app.persistence.UnitOfWork;
 import at.fhtw.app.persistence.repository.UserRepository;
 import at.fhtw.app.persistence.repository.UserRepositoryImpl;
-
-import java.util.List;
 
 public class UserService extends AbstractService {
 
@@ -31,12 +28,11 @@ public class UserService extends AbstractService {
         }
         return null; // Login fehlgeschlagen
     }
-    public boolean editName(String name, String newName) {
-        User user = userRepository.findByUsername(name);
+    public boolean editUser(User user) {
         if (user == null) {
             return false;
         } else {
-            userRepository.editUserData(name, newName);
+            userRepository.editUserData(user);
         }
         return true;
     }
@@ -45,6 +41,12 @@ public class UserService extends AbstractService {
             return userRepository.showStats(user.getUsername());
         }
         return "false";
+    }
+
+    public void updateStats(User user){
+        if(userRepository.findByUsername(user.getUsername()) != null){
+            userRepository.editUserData(user);
+        }
     }
 
 }

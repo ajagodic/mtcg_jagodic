@@ -36,15 +36,15 @@ public class TradingRepositoryImpl implements TradingRepository {
         List<Trade> offers = new ArrayList<>();
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                offers.add(new Trade(
-                        rs.getString("id"),
-                        rs.getString("card"),
-                        rs.getString("owner"),
-                        rs.getInt("status")
-                ));
-            }
-        } catch (SQLException e) {
+                while (rs.next()) {
+                    offers.add(new Trade(
+                            rs.getString("id"),
+                            rs.getString("card"),
+                            rs.getString("owner"),
+                            rs.getInt("status")
+                    ));
+                }
+        }catch (SQLException e) {
             throw new Exception("Error fetching trading offers", e);
         }
         return offers;

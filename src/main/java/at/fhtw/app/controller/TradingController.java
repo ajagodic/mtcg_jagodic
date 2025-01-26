@@ -27,12 +27,12 @@ public class TradingController implements RestController {
         HttpMethod method = request.getMethod();
         try {
             if (path.equals("/tradings") && method.equals(HttpMethod.GET)) {
-                return handleTrading(request);
+                return handleListingTrading(request);
             } else if (path.equals("/tradings") && method.equals(HttpMethod.POST)) {
                 return handleAddTrade(request);
             } else if (path.equals("/tradings") && method.equals(HttpMethod.DELETE)) {
                 return handleDeletingTrade(request);
-            }
+            } else if (path.equals("/tradings") && method.equals(HttpMethod.DELETE))
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,7 +40,7 @@ public class TradingController implements RestController {
         }
     }
 
-    public Response handleTrading(Request request) throws JsonProcessingException {
+    public Response handleListingTrading(Request request) throws JsonProcessingException {
         Trade trade = new ObjectMapper().readValue(request.getBody(), Trade.class);
         List<Trade> trades;
         try {

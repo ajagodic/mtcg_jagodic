@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-// UserRepositoryImpl.java
 public class UserRepositoryImpl implements UserRepository {
     private UnitOfWork unitOfWork;
 
@@ -55,11 +54,14 @@ public class UserRepositoryImpl implements UserRepository {
     //POST
     //name
     @Override
-    public boolean editUserData(String name, String newName) {
-        String sql = "UPDATE users SET name = ? WHERE name = ?";
+    public boolean editUserData(User user) {
+        //String sql = "UPDATE users SET name = ? WHERE name = ?";
+        String sql = "UPDATE users SET bio = ?, name = ?, image = ? WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
-            stmt.setString(1, newName);
-            stmt.setString(2, name);
+            stmt.setString(1, user.getBio());
+            stmt.setString(2, user.getName());
+            stmt.setString(3, user.getImage());
+            stmt.setString(4, user.getUsername());
             int rowsUpdated = stmt.executeUpdate();
             unitOfWork.commitTransaction();
             return rowsUpdated > 0;
@@ -127,6 +129,7 @@ public class UserRepositoryImpl implements UserRepository {
             throw new DataAccessException("Error assigning package to user: " + username, e);
         }
     }
+
 
 
 }

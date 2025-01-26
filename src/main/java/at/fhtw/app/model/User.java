@@ -21,7 +21,12 @@ public class User {
     private int coins = 20;
     @JsonAlias({"Deck"})
     private ArrayList<Card> deck;
-
+    @JsonAlias({"Image"})
+    private String image;
+    @JsonAlias({"Bio"})
+    private String bio;
+    @JsonAlias({"Name"})
+    private String name;
 
 
     public User(String username, String password) {

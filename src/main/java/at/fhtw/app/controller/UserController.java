@@ -28,7 +28,7 @@ public class UserController implements RestController {
             } else if (path.equals("/sessions") && method.equals(HttpMethod.POST)) {
                 return handleLogin(request);
             } else if (path.equals("/users") && method.equals(HttpMethod.PUT)){
-                //return handleUserUpdate(request);
+                return handleUserUpdate(request);
             }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
@@ -61,7 +61,7 @@ public class UserController implements RestController {
 
     private Response handleUserUpdate(Request request) throws JsonProcessingException {
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        boolean success = userService.editName(user.getUsername(), request.getBody());
+        boolean success = userService.editUser(user);
         if (success) {
             return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
         } else {
