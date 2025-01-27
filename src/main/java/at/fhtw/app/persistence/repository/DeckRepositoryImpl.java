@@ -1,67 +1,72 @@
 package at.fhtw.app.persistence.repository;
-import at.fhtw.app.model.Card;
 
-import java.sql.Connection;
+import at.fhtw.app.model.Card;
+import at.fhtw.app.persistence.DataAccessException;
+import at.fhtw.app.persistence.UnitOfWork;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DeckRepositoryImpl implements DeckRepository {
-    private final Connection connection;
 
-    public DeckRepositoryImpl(Connection connection) {
-        this.connection = connection;
+    private final UnitOfWork unitOfWork;
+
+    public DeckRepositoryImpl(UnitOfWork unitOfWork) {
+        this.unitOfWork = unitOfWork;
     }
 
     @Override
     public List<Card> getDeckByUsername(String username) {
-        String query = "SELECT c.id, c.name, c.damage FROM cards c " + "INNER JOIN decks d ON c.id = d.card_id " + "WHERE d.username = ?";
         List<Card> deck = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-            /*while (rs.next()) {
-                deck.add(new Card( rs.getString("name"), rs.getDouble("damage")));
-            }*/
-        } catch (Exception e) {
-            e.printStackTrace();
+        String sql = "SELECT id, name, damage, type, element FROM cards WHERE username = ? AND in_deck = true";
+
+        try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Card card = new Card(
+                        resultSet.getString("id"),
+                        resultSet.getString("name"),
+                        resultSet.getDouble("damage"),
+                        Card.Type.valueOf(resultSet.getString("card")),
+                        Card.Element.valueOf(resultSet.getString("element")));
+                deck.add(card);
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Error fetching deck for user: " + username, e);
         }
         return deck;
     }
 
-    @Override
-    public void saveDeck(String username, List<String> cardIds) {
-        String deldql = "DELETE FROM decks WHERE username = ?";
-        String insql = "INSERT INTO decks (username, card_id) VALUES (?, ?)";
-        try (PreparedStatement deleteStmt = connection.prepareStatement(deldql)) {
-            deleteStmt.setString(1, username);
-            deleteStmt.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        try (PreparedStatement insertStmt = connection.prepareStatement(insql)) {
-            for (String cardId : cardIds) {
-                insertStmt.setString(1, username);
-                insertStmt.setString(2, cardId);
-                insertStmt.addBatch();
+    @Override
+    public void setDeckForUser(String username, List<String> cardIds) {
+        String sql = "UPDATE cards SET in_deck = true WHERE id = ? AND username = ?";
+        String resetSql = "UPDATE cards SET in_deck = false WHERE username = ?";
+
+        try {
+            // Alle Karten des Benutzers zurücksetzen
+            try (PreparedStatement resetStatement = unitOfWork.prepareStatement(resetSql)) {
+                resetStatement.setString(1, username);
+                resetStatement.executeUpdate();
             }
-            insertStmt.executeBatch();
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            // Neue Karten ins Deck setzen
+            try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
+                for (String cardId : cardIds) {
+                    statement.setString(1, cardId);
+                    statement.setString(2, username);
+                    statement.executeUpdate();
+                }
+            }
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error setting deck for user: " + username, e);
         }
     }
 
-    @Override
-    public void deleteDeck(String username) {
-        String query = "DELETE FROM decks WHERE username = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setString(1, username);
-            stmt.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
-

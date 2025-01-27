@@ -16,5 +16,7 @@ public interface UserRepository {
     void updateEloLoss(String username);
     void updateWin(String username);
     void updateLoss(String username);
+    boolean checkUserExists(String username);
+    String getUserData(String username);
 }
 

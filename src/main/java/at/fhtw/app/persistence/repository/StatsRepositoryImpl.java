@@ -15,7 +15,7 @@ public class StatsRepositoryImpl implements StatsRepository {
 
     @Override
     public void displayStats(String username) throws Exception {
-        String sql = "SELECT elo FROM users WHERE username= ? ORDER BY elo DESC";
+        String sql = "SELECT elo,wins,losses FROM users WHERE username= ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.executeUpdate();

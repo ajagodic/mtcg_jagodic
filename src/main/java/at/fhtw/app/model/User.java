@@ -47,6 +47,5 @@ public class User {
     public void addCard(Card card){
         cardstack.add(card);
     }
-
 }
 

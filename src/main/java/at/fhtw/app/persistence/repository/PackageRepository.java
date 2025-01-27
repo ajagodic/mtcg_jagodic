@@ -7,7 +7,6 @@ import java.util.List;
 
 public interface PackageRepository {
     void createPackage(Package pkg) throws Exception;
-    List<Package> getAllPackages() throws Exception;
+    Package fetchPackage() throws Exception;
     void removePackage(String packageId) throws Exception;
-    int getCoinsForUser(User user) throws Exception;
 }

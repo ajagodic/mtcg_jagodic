@@ -1,8 +1,6 @@
 package at.fhtw.app.controller;
 
-import at.fhtw.app.model.User;
 import at.fhtw.app.service.AbstractService;
-import at.fhtw.app.service.StatsService;
 import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
@@ -11,13 +9,11 @@ import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.httpserver.server.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class StatsController extends AbstractService implements RestController {
     private UserService userService;
-    private StatsService statsService;
 
-    public StatsController(StatsService statsService) {this.userService = userService; this.statsService=statsService;}
+    public StatsController(UserService userService) {this.userService = userService;}
 
 
     @Override
@@ -26,7 +22,7 @@ public class StatsController extends AbstractService implements RestController {
         HttpMethod method = request.getMethod();
         try {
             if (path.equals("/stats") && method == HttpMethod.GET) {
-                return handleStatsboard(request);
+                return handlesStats(request);
             } else if (path.equals("/scoreboard") && method == HttpMethod.GET) {
                 return handleScoreboard(request);
             }
@@ -37,23 +33,35 @@ public class StatsController extends AbstractService implements RestController {
         }
     }
 
-    private Response handleStatsboard(Request request) throws JsonProcessingException {
+    private Response handlesStats(Request request) throws JsonProcessingException {
 
-        User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        String token = userService.displayStats(user);
-        if (token != null) {
-            return new Response(HttpStatus.OK, ContentType.JSON, "{\"token\": \"" + token + "\"}");
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring("Bearer ".length());
+            String username = token.split("-")[0];
+            if (!UserService.checkAuth(username, token)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON,"Access token is missing or invalid");
+            }
+            String s = userService.displayStats(username);
+            return new Response(HttpStatus.OK, ContentType.JSON, s);
         } else {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Statsboard couldn't be displayed\"}");
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON,"Acess token is missing or invalid");
         }
+
+
     }
     private Response handleScoreboard(Request request) throws Exception {
-        User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        boolean bool = statsService.showStats(user.getUsername());
-        if (bool) {
-            return new Response(HttpStatus.OK, ContentType.JSON, "{\"scoreboard\": \"true\"}");
-        }else {
-            return new Response(HttpStatus.NO_CONTENT, ContentType.JSON, "{\"scoreboard\": \"false\"}");
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring("Bearer ".length());
+            String username = token.split("-")[0];
+            if (!UserService.checkAuth(username, token)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON,"Access token is missing or invalid");
+            }
+            String s = userService.displayStats(username);
+            return new Response(HttpStatus.OK, ContentType.JSON, s);
+        } else {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON,"Acess token is missing or invalid");
         }
     }
 }

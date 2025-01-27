@@ -67,15 +67,15 @@ public class BattleService {
     }
 
     private static double calculateDamage(Card attacker, Card defender) {
-        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("MONSTER")) {
+        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("MONSTER")) {
             return attacker.getDamage(); // No elemental effect for monster vs monster
         }
 
-        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("SPELL")) {
+        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("SPELL")) {
             return calculateElementalEffect(attacker, defender);
         }
 
-        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("SPELL")) {
+        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("SPELL")) {
             return calculateElementalEffect(attacker, defender);
         }
 
@@ -86,10 +86,10 @@ public class BattleService {
         if (attacker.getName().equals("Wizard") && defender.getName().equals("Ork")) {
             return 0; // Wizard controls Ork
         }
-        if (attacker.getCardType().equals("SPELL") && defender.getName().equals("Kraken")) {
+        if (attacker.getType().name().equals("SPELL") && defender.getName().equals("Kraken")) {
             return 0; // Kraken immune to spells
         }
-        if (attacker.getCardType().equals("SPELL") && defender.getName().equals("Knight")) {
+        if (attacker.getType().name().equals("SPELL") && defender.getName().equals("Knight")) {
             return Double.MAX_VALUE; // Knight drowned by water spell
         }
         if (attacker.getName().equals("FireElf") && defender.getName().equals("Dragon")) {
@@ -100,8 +100,8 @@ public class BattleService {
     }
 
     private static double calculateElementalEffect(Card attacker, Card defender) {
-        String attackerElement = attacker.getCardType();
-        String defenderElement = defender.getCardType();
+        String attackerElement = attacker.getType().name();
+        String defenderElement = defender.getType().name();
 
         if (attackerElement.equals("Water") && defenderElement.equals("Fire") ||
                 attackerElement.equals("Fire") && defenderElement.equals("Normal") ||

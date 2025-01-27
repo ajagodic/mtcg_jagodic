@@ -15,6 +15,7 @@ public class Card {
     private final Type type;
     private final Element element;
 
+
     public enum Type {
         MONSTER,
         SPELL
@@ -33,12 +34,14 @@ public class Card {
         this.damage = damage;
     }
 
-    public String getCardType(){
-        return type.name();
+    public Card(String id, String name, double damage, Type type, Element element) {
+        this.id = id;
+        this.name = name;
+        this.damage = damage;
+        this.type = type;
+        this.element = element;
     }
-    public String getElement(){
-        return element.name();
-    }
+
 
     @Override
     public String toString() {

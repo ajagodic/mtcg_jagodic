@@ -6,6 +6,5 @@ import java.util.List;
 
 public interface DeckRepository {
     List<Card> getDeckByUsername(String username);
-    void saveDeck(String username, List<String> cardIds);
-    void deleteDeck(String username);
+    void setDeckForUser(String username, List<String> cardIds);
 }

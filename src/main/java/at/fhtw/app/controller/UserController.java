@@ -20,19 +20,25 @@ public class UserController implements RestController {
 
     @Override
     public Response handleRequest(Request request) {
+        /*System.out.println("Request Path: " + request.getPathname());
+        System.out.println("HTTP Method: " + request.getMethod());
+        System.out.println("Request Body: " + request.getBody());
+        System.out.println("Request Headers: " + request.getHeaderMap().toString());*/
         String path = request.getPathname();
         HttpMethod method = request.getMethod();
         try {
-            if (path.equals("/users") && method.equals(HttpMethod.POST)) {
+            if (path.equals("/users") && method == HttpMethod.POST) {
                 return handleRegistration(request);
-            } else if (path.equals("/users") && method.equals(HttpMethod.PUT)){
+            } else if (path.startsWith("/users") && method == HttpMethod.GET) {
+                return handleGetUserData(request);
+            } else if (path.startsWith("/users") && method == HttpMethod.PUT) {
                 return handleUserUpdate(request);
             }
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             e.printStackTrace();
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error\"}");
         }
+        return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\": \"User not found\"}");
     }
 
     private Response handleRegistration(Request request) throws JsonProcessingException {
@@ -45,27 +51,33 @@ public class UserController implements RestController {
             return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
         }
     }
-
-    private Response handleLogin(Request request) throws JsonProcessingException {
-
-        User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        String token = userService.loginUser(user.getUsername(), user.getPassword());
-        if (token != null) {
-            return new Response(HttpStatus.OK, ContentType.JSON, "{\"token\": \"" + token + "\"}");
-        } else {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Invalid username or password\"}");
-        }
-    }
-
     private Response handleUserUpdate(Request request) throws JsonProcessingException {
         User user = new ObjectMapper().readValue(request.getBody(), User.class);
         boolean success = userService.editUser(user);
         if (success) {
-            return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
+        } else {
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"User already exists\"}");
+        }
+    }
+
+    private Response handleGetUserData(Request request) throws JsonProcessingException {
+        String[] pathSegments = request.getPathname().split("/");
+        String s = userService.getUSerData(pathSegments[2]);
+        if (s!=null) {
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"Hier sind die Userdaten\":" + s);
+        } else {
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"No userdata\"}");
+        }
+    }
+    private Response handleUserEditData(Request request) throws JsonProcessingException {
+        User user = new ObjectMapper().readValue(request.getBody(), User.class);
+        boolean success = userService.updateUserData(user);
+        if (success) {
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
         } else {
             return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
         }
     }
-
 }
 

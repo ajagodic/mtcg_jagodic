@@ -1,14 +1,11 @@
 package at.fhtw;
 
-import at.fhtw.app.controller.LoginController;
-import at.fhtw.app.controller.PackageController;
-import at.fhtw.app.controller.StatsController;
+import at.fhtw.app.controller.*;
+import at.fhtw.app.service.DeckService;
 import at.fhtw.app.service.PackageService;
-import at.fhtw.app.service.StatsService;
 import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.server.Server;
 import at.fhtw.httpserver.utils.Router;
-import at.fhtw.app.controller.UserController;
 
 import java.io.IOException;
 
@@ -28,7 +25,10 @@ public class Main {
         Router router = new Router();
         router.addService("/users", new UserController(new UserService()));
         router.addService("/sessions", new LoginController(new UserService()));
-        router.addService("/stats", new StatsController(new StatsService()));
+        router.addService("/stats", new StatsController(new UserService()));
+        router.addService("/packages", new PackageController(new PackageService()));
+        router.addService("/transactions/packages", new PackageController(new PackageService()));
+        router.addService("/deck", new DeckController(new DeckService()));
         return router;
     }
 }

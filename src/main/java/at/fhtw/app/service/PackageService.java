@@ -1,55 +1,29 @@
 package at.fhtw.app.service;
 
 import at.fhtw.app.model.Package;
+import at.fhtw.app.persistence.UnitOfWork;
 import at.fhtw.app.persistence.repository.PackageRepository;
-import at.fhtw.app.persistence.repository.UserRepository;
-
-import java.util.List;
+import at.fhtw.app.persistence.repository.PackageRepositoryImpl;
+import at.fhtw.app.persistence.repository.UserRepositoryImpl;
 
 public class PackageService {
-    private final PackageRepository packageRepository;
-    private final UserRepository userRepository;
 
-    public PackageService(PackageRepository packageRepository, UserRepository userRepository) {
-        this.packageRepository = packageRepository;
-        this.userRepository = userRepository;
+    private final PackageRepository packageRepository;
+
+    public PackageService() {
+        this.packageRepository = new PackageRepositoryImpl(new UnitOfWork());
     }
 
-    public void createPackage(String token, Package pkg) throws Exception {
-        if (!isAdminToken(token)) {
-            throw new Exception("Only admins can create packages.");
-        }
-
-        if (pkg.getCards().size() != 5) {
-            throw new Exception("A package must contain exactly 5 cards.");
-        }
+    public void addPackage(Package pkg) throws Exception {
         packageRepository.createPackage(pkg);
     }
 
-    private boolean isAdminToken(String token) {
-        return token != null && token.startsWith("admin");
-    }
-
-
-    public List<Package> acquirePackage(String username) throws Exception {
-        // Überprüfen, ob Pakete verfügbar sind
-        List<Package> availablePackages = packageRepository.getAllPackages();
-
-        if (availablePackages.isEmpty()) {
-            throw new Exception("No packages available.");
+    public Package buyPackage() throws Exception {
+        Package pkg = packageRepository.fetchPackage();
+        if (pkg == null) {
+            throw new IllegalStateException("No packages available to buy.");
         }
-
-        // Benutzer-Coins abfragen
-        int userCoins = userRepository.getCoins(username);
-
-        if (userCoins < 5) {
-            throw new Exception("Not enough coins to purchase a package.");
-        }
-        userRepository.updateCoins(username, userCoins - 5); // Coins abziehen
-        userRepository.addPackageToUser(username, availablePackages.getFirst()); // Paket dem Benutzer hinzufügen
-        packageRepository.removePackage(availablePackages.get(0).getId()); // Paket aus Repository entfernen
-
-        return List.of(availablePackages.getFirst()); // Rückgabe des erworbenen Pakets
+        packageRepository.removePackage(pkg.getId());
+        return pkg;
     }
 }
-

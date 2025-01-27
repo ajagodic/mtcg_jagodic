@@ -19,9 +19,10 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByUsername(String username) {
         String sql = "UPDATE users SET token = ? WHERE username = ?";
+        String sql2= "SELECT * FROM users WHERE username = ?";
 
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
-            statement.setString(1, username + "mtcgToken");
+            statement.setString(1, username + "-mtcgToken");
             statement.setString(2, username);
             int rowsUpdated = statement.executeUpdate();
             if (rowsUpdated > 0) {
@@ -29,7 +30,55 @@ public class UserRepositoryImpl implements UserRepository {
             } else {
                 System.out.println("Kein Benutzer mit dem angegebenen Username gefunden.");
             }
-
+            unitOfWork.commitTransaction(); // Transaktion bestätigen
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
+            e.printStackTrace();
+        }
+        try(PreparedStatement statement= unitOfWork.prepareStatement(sql2)){
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                User user = new User(
+                        resultSet.getString("username"),
+                        resultSet.getString("password"));
+                return user;
+            }
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+        }
+        return null;
+    }
+    @Override
+    public boolean checkUserExists(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
+            statement.setString(1, username);
+            int rowsUpdated = statement.executeUpdate();
+            if (rowsUpdated > 0) {
+                System.out.println("User vorhanden");
+                return true;
+            } else {
+                System.out.println("User fehlt");
+            }
+            unitOfWork.commitTransaction(); // Transaktion bestätigen
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
+            e.printStackTrace();
+        }
+        return false;
+    }
+    @Override
+    public String getUserData(String username) {
+        String sql = "SELECT * FROM users WHERE username = ?";
+        try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
+            statement.setString(1, username);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") +  " Coins: " + rs.getString("coins") +  " Bio: " + rs.getString("bio") +  " Name: " + rs.getString("name")  ;
+                }
+            }
             unitOfWork.commitTransaction(); // Transaktion bestätigen
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
@@ -64,7 +113,7 @@ public class UserRepositoryImpl implements UserRepository {
             stmt.setString(4, user.getUsername());
             int rowsUpdated = stmt.executeUpdate();
             unitOfWork.commitTransaction();
-            return rowsUpdated > 0;
+            return true;
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
             throw new DataAccessException("Error editing username", e);
@@ -74,12 +123,12 @@ public class UserRepositoryImpl implements UserRepository {
     //GET
     @Override
     public String showStats(String username) {
-        String sql = "SELECT elo,token FROM users WHERE username = ?";
+        String sql = "SELECT elo,wins,losses FROM users WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo") + "Token: " + rs.getString("token");
+                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses");
                 }
             }
         } catch (SQLException e) {

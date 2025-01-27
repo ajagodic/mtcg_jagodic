@@ -22,7 +22,7 @@ public class UserService extends AbstractService {
     }
     public String loginUser(String username, String password) {
         User user = userRepository.findByUsername(username);
-        if (user != null && user.getPassword().equals(password)) {
+        if (user!= null && user.getPassword().equals(password)) {
             String token = username + "-mtcgToken"; // Generiere Token
             return token;
         }
@@ -36,20 +36,27 @@ public class UserService extends AbstractService {
         }
         return true;
     }
-    public String displayStats(User user){
-        if(userRepository.findByUsername(user.getUsername()) != null){
-            return userRepository.showStats(user.getUsername());
+    public String displayStats(String username){
+        if(!userRepository.checkUserExists(username)){
+            return userRepository.showStats(username);
         }
         return "false";
     }
     public User findUserbyUsername(String username){
         return userRepository.findByUsername(username);
     }
-
-    public void updateStats(User user){
-        if(userRepository.findByUsername(user.getUsername()) != null){
-            userRepository.editUserData(user);
+    public String getUSerData(String username){
+        if(!userRepository.checkUserExists(username)){
+            return userRepository.getUserData(username);
         }
+        return "false";
+    }
+
+    public boolean updateUserData(User user){
+        if(!userRepository.checkUserExists(user.getUsername())){
+            return userRepository.editUserData(user);
+        }
+        return false;
     }
     public void updateWin(User user){
         if(userRepository.findByUsername(user.getUsername()) != null){
@@ -70,6 +77,20 @@ public class UserService extends AbstractService {
         if(userRepository.findByUsername(user.getUsername()) != null){
             userRepository.updateEloLoss(user.getUsername());
         }
+    }
+
+    public static boolean checkAuth(String username, String token) {
+        if (token == null || !token.startsWith(username)) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isAdmin(String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return false;
+        }
+        return token.equals("Bearer %s-mtcgToken".formatted("admin"));
     }
 
 
