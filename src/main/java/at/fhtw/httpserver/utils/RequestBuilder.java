@@ -1,6 +1,7 @@
 package at.fhtw.httpserver.utils;
 
 import at.fhtw.httpserver.http.Method;
+import at.fhtw.httpserver.server.HttpMethod;
 import at.fhtw.httpserver.server.Request;
 
 import java.io.BufferedReader;
@@ -35,20 +36,30 @@ public class RequestBuilder {
         return request;
     }
 
-    private Method getMethod(String methodString) {
-        return Method.valueOf(methodString.toUpperCase(Locale.ROOT));
+    private HttpMethod getMethod(String methodString) {
+        Method httpMethod = Method.valueOf(methodString.toUpperCase(Locale.ROOT));
+        switch (httpMethod) {
+            case GET:
+                return HttpMethod.GET;
+            case POST:
+                return HttpMethod.POST;
+            case PUT:
+                return HttpMethod.PUT;
+            case DELETE:
+                return HttpMethod.DELETE;
+            default:
+                throw new IllegalArgumentException("Unsupported HTTP method: " + methodString);
+        }
     }
 
     private void setPathname(Request request, String path){
         Boolean hasParams = path.indexOf("?") != -1;
 
         if (hasParams) {
-            String[] pathParts =  path.split("\\?");
+            String[] pathParts = path.split("\\?");
             request.setPathname(pathParts[0]);
             request.setParams(pathParts[1]);
-        }
-        else
-        {
+        } else {
             request.setPathname(path);
             request.setParams(null);
         }

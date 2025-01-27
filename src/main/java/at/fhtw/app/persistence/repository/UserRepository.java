@@ -12,5 +12,9 @@ public interface UserRepository {
     int getCoins(String username);
     void updateCoins(String username, int coins);
     void addPackageToUser(String username, Package packageToAdd);
+    void updateEloWin(String username);
+    void updateEloLoss(String username);
+    void updateWin(String username);
+    void updateLoss(String username);
 }
 

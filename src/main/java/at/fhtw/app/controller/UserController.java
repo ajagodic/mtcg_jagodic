@@ -25,8 +25,6 @@ public class UserController implements RestController {
         try {
             if (path.equals("/users") && method.equals(HttpMethod.POST)) {
                 return handleRegistration(request);
-            } else if (path.equals("/sessions") && method.equals(HttpMethod.POST)) {
-                return handleLogin(request);
             } else if (path.equals("/users") && method.equals(HttpMethod.PUT)){
                 return handleUserUpdate(request);
             }

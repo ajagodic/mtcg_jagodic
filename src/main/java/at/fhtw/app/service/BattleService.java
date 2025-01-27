@@ -2,13 +2,18 @@ package at.fhtw.app.service;
 
 import at.fhtw.app.model.Card;
 import at.fhtw.app.model.User;
-
+import at.fhtw.app.persistence.repository.UserRepository;
 import java.util.*;
 
 public class BattleService {
     private static final int MAX_ROUNDS = 100;
+    private final UserRepository userRepository;
 
-    public static String startBattle(User player1, User player2) {
+    public BattleService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public String startBattle(User player1, User player2) {
         List<Card> deck1 = new ArrayList<>(player1.getDeck());
         List<Card> deck2 = new ArrayList<>(player2.getDeck());
         StringBuilder battleLog = new StringBuilder();
@@ -44,12 +49,16 @@ public class BattleService {
 
         if (deck1.isEmpty()) {
             battleLog.append(player2.getName()).append(" wins the battle!\n");
-            player2.updateStats(true);
-            player1.updateStats(false);
+            userRepository.updateEloWin(player2.getUsername());
+            userRepository.updateWin(player2.getUsername());
+            userRepository.updateEloLoss(player1.getUsername());
+            userRepository.updateLoss(player1.getUsername());
         } else if (deck2.isEmpty()) {
             battleLog.append(player1.getName()).append(" wins the battle!\n");
-            player1.updateStats(true);
-            player2.updateStats(false);
+            userRepository.updateEloLoss(player2.getUsername());
+            userRepository.updateLoss(player2.getUsername());
+            userRepository.updateEloWin(player1.getUsername());
+            userRepository.updateWin(player1.getUsername());
         } else {
             battleLog.append("The battle is a draw!\n");
         }
@@ -58,15 +67,15 @@ public class BattleService {
     }
 
     private static double calculateDamage(Card attacker, Card defender) {
-        if (attacker instanceof MonsterCard && defender instanceof MonsterCard) {
+        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("MONSTER")) {
             return attacker.getDamage(); // No elemental effect for monster vs monster
         }
 
-        if (attacker instanceof SpellCard && defender instanceof SpellCard) {
+        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("SPELL")) {
             return calculateElementalEffect(attacker, defender);
         }
 
-        if (attacker instanceof SpellCard && defender instanceof MonsterCard) {
+        if (attacker.getCardType().equals("SPELL") && defender.getCardType().equals("SPELL")) {
             return calculateElementalEffect(attacker, defender);
         }
 
@@ -77,10 +86,10 @@ public class BattleService {
         if (attacker.getName().equals("Wizard") && defender.getName().equals("Ork")) {
             return 0; // Wizard controls Ork
         }
-        if (attacker instanceof SpellCard && defender.getName().equals("Kraken")) {
+        if (attacker.getCardType().equals("SPELL") && defender.getName().equals("Kraken")) {
             return 0; // Kraken immune to spells
         }
-        if (attacker instanceof SpellCard && defender.getName().equals("Knight")) {
+        if (attacker.getCardType().equals("SPELL") && defender.getName().equals("Knight")) {
             return Double.MAX_VALUE; // Knight drowned by water spell
         }
         if (attacker.getName().equals("FireElf") && defender.getName().equals("Dragon")) {
@@ -91,8 +100,8 @@ public class BattleService {
     }
 
     private static double calculateElementalEffect(Card attacker, Card defender) {
-        String attackerElement = attacker.getElement();
-        String defenderElement = defender.getElement();
+        String attackerElement = attacker.getCardType();
+        String defenderElement = defender.getCardType();
 
         if (attackerElement.equals("Water") && defenderElement.equals("Fire") ||
                 attackerElement.equals("Fire") && defenderElement.equals("Normal") ||

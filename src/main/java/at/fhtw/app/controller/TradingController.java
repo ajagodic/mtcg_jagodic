@@ -32,7 +32,7 @@ public class TradingController implements RestController {
                 return handleAddTrade(request);
             } else if (path.equals("/tradings") && method.equals(HttpMethod.DELETE)) {
                 return handleDeletingTrade(request);
-            } else if (path.equals("/tradings") && method.equals(HttpMethod.DELETE))
+            }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
             e.printStackTrace();

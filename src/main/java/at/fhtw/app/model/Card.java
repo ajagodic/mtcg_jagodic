@@ -36,6 +36,9 @@ public class Card {
     public String getCardType(){
         return type.name();
     }
+    public String getElement(){
+        return element.name();
+    }
 
     @Override
     public String toString() {

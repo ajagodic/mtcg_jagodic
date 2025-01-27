@@ -129,6 +129,57 @@ public class UserRepositoryImpl implements UserRepository {
             throw new DataAccessException("Error assigning package to user: " + username, e);
         }
     }
+    @Override
+    public void updateEloWin(String username) {
+        String sql = "UPDATE users SET elo = elo + 3 WHERE username = ?";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error assigning package to user: " + username, e);
+        }
+    }
+
+    @Override
+    public void updateEloLoss(String username) {
+        String sql = "UPDATE users SET elo = elo - 5 WHERE username = ?";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error assigning package to user: " + username, e);
+        }
+    }
+
+    @Override
+    public void updateWin(String username) {
+        String sql = "UPDATE users SET wins = wins + 1 WHERE username = ?";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error assigning package to user: " + username, e);
+        }
+    }
+
+    @Override
+    public void updateLoss(String username) {
+        String sql = "UPDATE users SET losses = losses + 1 WHERE username = ?";
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
+            unitOfWork.commitTransaction();
+        } catch (SQLException e) {
+            unitOfWork.rollbackTransaction();
+            throw new DataAccessException("Error assigning package to user: " + username, e);
+        }
+    }
 
 
 
