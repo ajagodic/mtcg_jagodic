@@ -19,7 +19,7 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findByUsername(String username) {
         String sql = "UPDATE users SET token = ? WHERE username = ?";
-        String sql2= "SELECT * FROM users WHERE username = ?";
+        String sql2 = "SELECT * FROM users WHERE username = ?";
 
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
             statement.setString(1, username + "-mtcgToken");
@@ -35,7 +35,7 @@ public class UserRepositoryImpl implements UserRepository {
             unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
             e.printStackTrace();
         }
-        try(PreparedStatement statement= unitOfWork.prepareStatement(sql2)){
+        try (PreparedStatement statement = unitOfWork.prepareStatement(sql2)) {
             statement.setString(1, username);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -50,12 +50,13 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return null;
     }
+
     @Override
     public boolean checkUserExists(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
             statement.setString(1, username);
-            ResultSet rs=statement.executeQuery();
+            ResultSet rs = statement.executeQuery();
             if (rs.next()) {
                 System.out.println("User vorhanden");
                 return true;
@@ -69,6 +70,7 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return false;
     }
+
     @Override
     public String getUserData(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
@@ -76,7 +78,7 @@ public class UserRepositoryImpl implements UserRepository {
             statement.setString(1, username);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") +  " Coins: " + rs.getString("coins") +  " Bio: " + rs.getString("bio") +  " Name: " + rs.getString("name \n")  ;
+                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") + " Coins: " + rs.getString("coins") + " Bio: " + rs.getString("bio") + " Name: " + rs.getString("name \n");
                 }
             }
             unitOfWork.commitTransaction(); // Transaktion bestätigen
@@ -86,7 +88,7 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return null;
     }
-    
+
     @Override
     public void saveUser(User user) {
         String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
@@ -125,23 +127,32 @@ public class UserRepositoryImpl implements UserRepository {
     //GET
     @Override
     public String showStats(String username) {
-        String sql = "SELECT elo,wins,losses FROM users WHERE username = ?";
+        String sql = "SELECT elo, COALESCE(wins, 0) AS wins, COALESCE(losses, 0) AS losses, coins FROM users WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses");
+                    int elo = rs.getInt("elo");
+                    int wins = rs.getInt("wins");
+                    int losses = rs.getInt("losses");
+                    int coins = rs.getInt("coins");
+
+                    // Debugging-Log (Kann später entfernt werden)
+                    System.out.println("Stats for " + username + ": ELO=" + elo + ", Wins=" + wins + ", Losses=" + losses + ", Coins=" + coins);
+
+                    return "{"+username+"\":  Elo\": " + elo + ", \"Wins\": " + wins + ", \"Losses\": " + losses + " } , \"Coins\": " + coins + " } ";
                 }
             }
         } catch (SQLException e) {
-            throw new DataAccessException("Error showing stats", e);
+            throw new DataAccessException("Error showing stats for user: " + username, e);
         }
-        return "No stats available for user.";
+        return "{ \"message\": \"No stats available for user.\" }";
     }
+
 
     @Override
     public int getCoins(String username) {
-        String sql = "SELECT token FROM users WHERE username = ?";
+        String sql = "SELECT coins FROM users WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -154,6 +165,7 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return 0;
     }
+
     @Override
     public void updateCoins(String username, int newCoinValue) {
         String sql = "UPDATE users SET coins = ? WHERE username = ?";
@@ -167,6 +179,7 @@ public class UserRepositoryImpl implements UserRepository {
             throw new DataAccessException("Error updating coins for user: " + username, e);
         }
     }
+
     @Override
     public void addPackageToUser(String username, Package packageToAdd) {
         String sql = "INSERT INTO user_packages (username, package_id) VALUES (?, ?)";
@@ -180,9 +193,10 @@ public class UserRepositoryImpl implements UserRepository {
             throw new DataAccessException("Error assigning package to user: " + username, e);
         }
     }
+
     @Override
     public void updateEloWin(String username) {
-        String sql = "UPDATE users SET elo = elo + 3 WHERE username = ?";
+        String sql = "UPDATE users SET elo = elo + 3, wins = wins + 1 WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
@@ -195,7 +209,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void updateEloLoss(String username) {
-        String sql = "UPDATE users SET elo = elo - 5 WHERE username = ?";
+        String sql = "UPDATE users SET elo = elo - 5, losses = losses + 1 WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
@@ -205,33 +219,24 @@ public class UserRepositoryImpl implements UserRepository {
             throw new DataAccessException("Error assigning package to user: " + username, e);
         }
     }
-
     @Override
-    public void updateWin(String username) {
-        String sql = "UPDATE users SET wins = wins + 1 WHERE username = ?";
-        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
+    public void uniqueFeature(String winner, String loser) {
+        String sqlWin = "UPDATE users SET coins = coins + 5 WHERE username = ?";
+
+        try {
+
+            // Gewinner bekommt +5 Coins
+            try (PreparedStatement stmt = unitOfWork.prepareStatement(sqlWin)) {
+                stmt.setString(1, winner);
+                stmt.executeUpdate();
+            }
             unitOfWork.commitTransaction();
         } catch (SQLException e) {
+            // Falls ein Fehler auftritt, ALLE Änderungen rückgängig machen (Rollback)
             unitOfWork.rollbackTransaction();
-            throw new DataAccessException("Error assigning package to user: " + username, e);
+            throw new RuntimeException("Error updating coins for winner and loser: " + e.getMessage(), e);
         }
     }
-
-    @Override
-    public void updateLoss(String username) {
-        String sql = "UPDATE users SET losses = losses + 1 WHERE username = ?";
-        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
-            unitOfWork.commitTransaction();
-        } catch (SQLException e) {
-            unitOfWork.rollbackTransaction();
-            throw new DataAccessException("Error assigning package to user: " + username, e);
-        }
-    }
-
 
 
 }

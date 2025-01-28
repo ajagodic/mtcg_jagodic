@@ -14,9 +14,8 @@ public interface UserRepository {
     void addPackageToUser(String username, Package packageToAdd);
     void updateEloWin(String username);
     void updateEloLoss(String username);
-    void updateWin(String username);
-    void updateLoss(String username);
     boolean checkUserExists(String username);
     String getUserData(String username);
+    void uniqueFeature(String winner, String loser);
 }
 

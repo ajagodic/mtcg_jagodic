@@ -31,20 +31,20 @@ public class BattleService {
         }
 
         StringBuilder battleLog = new StringBuilder();
-        battleLog.append("Battle Start: ").append(player1.getName()).append(" vs ").append(player2.getName()).append("\\n");
+        battleLog.append("Battle Start: ").append(player1.getUsername()).append(" vs ").append(player2.getUsername()).append(System.lineSeparator());
 
         int round = 1;
         Random random = new Random();
 
         while (!deck1.isEmpty() && !deck2.isEmpty() && round <= MAX_ROUNDS) {
-            battleLog.append("Round ").append(round).append(":\\n");
+            battleLog.append(" Round ").append(round).append(System.lineSeparator());
 
             Card card1 = deck1.get(random.nextInt(deck1.size()));
             Card card2 = deck2.get(random.nextInt(deck2.size()));
 
-            battleLog.append(player1.getName()).append(" plays ").append(card1.getName())
+            battleLog.append(player1.getUsername()).append(" plays ").append(card1.getName())
                     .append(" (").append(card1.getDamage()).append(" damage)").append(System.lineSeparator());
-            battleLog.append(player2.getName()).append(" plays ").append(card2.getName())
+            battleLog.append(player2.getUsername()).append(" plays ").append(card2.getName())
                     .append(" (").append(card2.getDamage()).append(" damage)").append(System.lineSeparator());
 
             double card1Damage = calculateEffectiveDamage(card1, card2);
@@ -59,19 +59,19 @@ public class BattleService {
                 deck1.remove(card1);
                 deck2.add(card1);
             } else {
-                battleLog.append("It's a draw!\\n");
+                battleLog.append("It's a draw!").append(System.lineSeparator());
             }
 
             round++;
         }
 
         if (deck1.isEmpty() && deck2.isEmpty()) {
-            battleLog.append("Battle ends in a draw! No cards left.\\n");
+            battleLog.append("Battle ends in a draw! No cards left.").append(System.lineSeparator());
         } else if (deck1.isEmpty()) {
-            battleLog.append(player2.getName()).append(" wins the battle!\\n");
+            battleLog.append(player2.getUsername()).append(" wins the battle!").append(System.lineSeparator());
             updateELO(player2, player1);
         } else {
-            battleLog.append(player1.getName()).append(" wins the battle!\\n");
+            battleLog.append(player1.getUsername()).append(" wins the battle!").append(System.lineSeparator());
             updateELO(player1, player2);
         }
 
@@ -104,12 +104,15 @@ public class BattleService {
     }
 
     private void updateELO(User winner, User loser) {
-        winner.setElo(winner.getElo() + 3);
+        /**winner.setElo(winner.getElo() + 3);
         loser.setElo(loser.getElo() - 5);
-
-        userRepository.updateWin(winner.getUsername());
-        userRepository.updateEloWin(winner.getUsername());
-        userRepository.updateLoss(loser.getUsername());
+        winner.setWins(winner.getWins() + 1);
+        loser.setLosses(loser.getLosses() + 1);*/
+        //userRepository.updateWin(winner.getUsername());
+        //userRepository.updateLoss(loser.getUsername());
         userRepository.updateEloLoss(loser.getUsername());
+        userRepository.updateEloWin(winner.getUsername());
+        userRepository.uniqueFeature(winner.getUsername(), loser.getUsername());
+
     }
 }

@@ -58,16 +58,6 @@ public class UserService extends AbstractService {
         }
         return false;
     }
-    public void updateWin(User user){
-        if(userRepository.findByUsername(user.getUsername()) != null){
-            userRepository.updateWin(user.getUsername());
-        }
-    }
-    public void updateLoss(User user){
-        if(userRepository.findByUsername(user.getUsername()) != null){
-            userRepository.updateLoss(user.getUsername());
-        }
-    }
     public void updateEloWin(User user){
         if(userRepository.findByUsername(user.getUsername()) != null){
             userRepository.updateEloWin(user.getUsername());

@@ -1,46 +1,72 @@
-# MTCG
+# Anwendungsdokumentation
 
-## Protokoll über Implementierung der Anforderung für Intermediate Hand-In 1
+## App-Design
 
-Github: https://github.com/ajagodic/mtcg_jagodic<br>
-Der SQL Script für das Erstellen von den benötigten Daten innerhalb einer Postgres DB, finden Sie im .sql-File
+### Designentscheidungen
 
-## Implementierung
-### Erstellte Klassen: 
-<ul>
-<li>UserRepositoryImpl</li>
-<li>LoginController</li>
-<li>UserController</li>
-<li>Card</li>
-<li>User</li>
-<li>UserService</li>
-</ul>
+Die App verwendet eine modulare Struktur mit klarer Trennung der Verantwortlichkeiten. Wichtige Designentscheidungen umfassen:
 
-### Erstellte Interfaces:
-<li>UserRepository</li>
+- **Controller**: Bearbeiten HTTP-Anfragen und leiten sie an Service-Methoden weiter.
+- **Services**: Enthalten Geschäftslogik und interagieren mit Repositories für Datenpersistenz.
+- **Repositories**: Verwalten Datenbankoperationen und setzen das DAO-Muster um.
+- **Modelle**: Repräsentieren die Kerneinheiten der Anwendung (z. B. `User`, `Card`, `Deck`).
 
-### Registrierung
+### Struktur der Anwendung
 
-Endpoint: POST /users <br>
-Der Benutzer übermittelt einen Registrierungspost mit einem eindeutigen Benutzernamen und Passwort.
-Überprüfung in der UserRepository, ob der Benutzername bereits existiert.
-<br>Wenn ja: Rückgabe eines HTTP 409 (Conflict), Benutzer existiert bereits.
-<br>Wenn nein: Erstellung eines neuen Benutzers und Speicherung in der Datenbank (Transaktion über UnitOfWork).
-<br>Erfolgreiche Registrierung gibt HTTP 201 (Created) zurück.
+Die Anwendung ist in folgende Pakete unterteilt:
 
-### Login
-Endpoint POST /sessions <br>
-Der Benutzer übermittelt Login-Daten.
-Die UserRepository sucht nach einem Benutzer mit übereinstimmendem Benutzernamen.
-<br>Wenn Benutzer nicht existiert: Rückgabe eines HTTP 401 (Unauthorized).
-<br>Wenn Passwort falsch: Rückgabe eines HTTP 401 (Unauthorized).
-<br>Wenn Benutzername und Passwort stimmen: Erzeugung eines Token basierend auf dem Benutzernamen ({username}-mtcgToken).
-<br>Erfolgreiches Login gibt HTTP 200 (OK) zurück und sendet den Token im Response-Body.
+- \`\`: Enthält Kernmodelle wie `User`, `Card`, `Deck` und `Trade`.
+- \`\`: Stellt Services wie `UserService`, `DeckService` und `TradingService` bereit.
+- \`\`: Verarbeitet Datenzugriff über Repositories, einschließlich `UserRepositoryImpl` und `PackageRepositoryImpl`.
+- \`\`: Implementiert den HTTP-Server, das Routing von Anfragen und die Bearbeitung von Antworten.
 
-#### Fehlerbehandlung:
-<br>Registrierung:
-<br>Fehler bei Datenbankoperationen: HTTP 500 (Internal Server Error).
-<br>Fehlende Felder im Payload: HTTP 400 (Bad Request).
-<br>Login:
-<br>Benutzername oder Passwort fehlen: HTTP 400 (Bad Request).
-<br>Datenbankverbindung schlägt fehl: HTTP 500 (Internal Server Error).
+### Klassendiagramm
+
+```plaintext
++------------------+        +------------------+        +--------------------+
+|    Controller    |<------>|     Service      |<------>|    Repository      |
++------------------+        +------------------+        +--------------------+
+| UserController   |        | UserService      |        | UserRepositoryImpl |
+| DeckController   |        | DeckService      |        | PackageRepository  |
+| ...              |        | ...              |        | ...                |
++------------------+        +------------------+        +--------------------+
+```
+
+## Gelerntes
+
+1. **Fehlerbehandlung**: Die Robustheit wurde durch die Implementierung detaillierter HTTP-Statuscodes für verschiedene Fehlerszenarien verbessert (z. B. `409 Conflict`, `500 Internal Server Error`).
+2. **Datenbank-Transaktionen**: Atomarität für kritische Operationen wie die Benutzerregistrierung sichergestellt.
+3. **Testgetriebene Entwicklung**: Unit-Tests mit JUnit und Mockito waren essenziell zur Überprüfung der Geschäftslogik und der Datenintegrität.
+4. **Herausforderungen mit Docker**: Probleme mit der Docker-basierten Datenbankeinrichtung führten zum Wechsel auf lokale Datenbankkonfigurationen.
+
+## Entscheidungen zum Unit-Testing
+
+- **Verwendete Frameworks**: JUnit 5 und Mockito.
+- **Testziele**: Fokus auf die Prüfung der Geschäftslogik in den Services und der Datenintegrität in den Repositories.
+- **Mocking**: Mockito wurde verwendet, um Datenbankinteraktionen zu simulieren und die Abhängigkeit von der tatsächlichen Datenbank während der Tests zu vermeiden.
+- **Beispiel-Testfälle**:
+    - Szenarien für gültiges und ungültiges Benutzer-Login.
+    - Logik für das Erstellen von Decks und die Zuordnung von Karten.
+    - Operationen des Trading-Services.
+
+## Einzigartiges Feature
+
+Die App implementiert ein **tokenbasiertes Authentifizierungssystem**, das Sitzungstokens während des Logins generiert. Diese Tokens werden bei jeder Anfrage validiert, um einen sicheren Zugriff auf benutzerspezifische Ressourcen zu gewährleisten.
+
+### Beispiel:
+
+- Login generiert ein Token: `{username}-mtcgToken`.
+- Tokens werden im `Authorization`-Header für nachfolgende Anfragen gesendet.
+
+## Aufgewendete Zeit
+
+| Aufgabe                               | Zeitaufwand    |
+| ------------------------------------- | -------------- |
+| Initiales Projektsetup                | 4 Stunden      |
+| Datenbankdesign und Implementierung   | 6 Stunden      |
+| API-Entwicklung (Registrierung/Login) | 8 Stunden      |
+| Unit-Testing                          | 5 Stunden      |
+| Debugging und Fehlerbehebung          | 4 Stunden      |
+| Dokumentation                         | 3 Stunden      |
+| **Gesamt**                            | **30 Stunden** |
+
