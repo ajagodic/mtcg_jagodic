@@ -55,8 +55,8 @@ public class UserRepositoryImpl implements UserRepository {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
             statement.setString(1, username);
-            int rowsUpdated = statement.executeUpdate();
-            if (rowsUpdated > 0) {
+            ResultSet rs=statement.executeQuery();
+            if (rs.next()) {
                 System.out.println("User vorhanden");
                 return true;
             } else {

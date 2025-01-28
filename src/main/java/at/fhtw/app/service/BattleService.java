@@ -2,120 +2,114 @@ package at.fhtw.app.service;
 
 import at.fhtw.app.model.Card;
 import at.fhtw.app.model.User;
+import at.fhtw.app.persistence.UnitOfWork;
 import at.fhtw.app.persistence.repository.UserRepository;
+import at.fhtw.app.persistence.repository.UserRepositoryImpl;
+
 import java.util.*;
 
 public class BattleService {
     private static final int MAX_ROUNDS = 100;
     private final UserRepository userRepository;
+    private final DeckService deckService; // 🔥 DeckService hinzufügen
 
-    public BattleService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public BattleService(DeckService deckService) {
+        this.userRepository = new UserRepositoryImpl(new UnitOfWork());
+        this.deckService = deckService; // 🔥 DeckService speichern
     }
 
     public String startBattle(User player1, User player2) {
-        List<Card> deck1 = new ArrayList<>(player1.getDeck());
-        List<Card> deck2 = new ArrayList<>(player2.getDeck());
-        StringBuilder battleLog = new StringBuilder();
+        // 🔥 Decks mit deckService abrufen
+        List<Card> deck1 = deckService.getDeckByUsername(player1.getUsername(),true);
+        List<Card> deck2 = deckService.getDeckByUsername(player2.getUsername(),true);
 
-        battleLog.append("Battle Start: ").append(player1.getName()).append(" vs ").append(player2.getName()).append("\n");
+        if (deck1 == null || deck2 == null) {
+            return "Error: One or both players have no deck!";
+        }
+        if (deck1.isEmpty() || deck2.isEmpty()) {
+            return "Error: One or both players have an empty deck!";
+        }
+
+        StringBuilder battleLog = new StringBuilder();
+        battleLog.append("Battle Start: ").append(player1.getName()).append(" vs ").append(player2.getName()).append("\\n");
 
         int round = 1;
+        Random random = new Random();
 
         while (!deck1.isEmpty() && !deck2.isEmpty() && round <= MAX_ROUNDS) {
-            Card card1 = deck1.get(new Random().nextInt(deck1.size()));
-            Card card2 = deck2.get(new Random().nextInt(deck2.size()));
+            battleLog.append("Round ").append(round).append(":\\n");
 
-            battleLog.append("Round ").append(round).append(": ")
-                    .append(card1.getName()).append(" (").append(card1.getDamage()).append(") vs ")
-                    .append(card2.getName()).append(" (").append(card2.getDamage()).append(")\n");
+            Card card1 = deck1.get(random.nextInt(deck1.size()));
+            Card card2 = deck2.get(random.nextInt(deck2.size()));
 
-            double damage1 = calculateDamage(card1, card2);
-            double damage2 = calculateDamage(card2, card1);
+            battleLog.append(player1.getName()).append(" plays ").append(card1.getName())
+                    .append(" (").append(card1.getDamage()).append(" damage)").append(System.lineSeparator());
+            battleLog.append(player2.getName()).append(" plays ").append(card2.getName())
+                    .append(" (").append(card2.getDamage()).append(" damage)").append(System.lineSeparator());
 
-            if (damage1 > damage2) {
-                battleLog.append("Winner: ").append(card1.getName()).append("\n");
+            double card1Damage = calculateEffectiveDamage(card1, card2);
+            double card2Damage = calculateEffectiveDamage(card2, card1);
+
+            if (card1Damage > card2Damage) {
+                battleLog.append(card1.getName()).append(" wins the round!").append(System.lineSeparator());
                 deck2.remove(card2);
                 deck1.add(card2);
-            } else if (damage2 > damage1) {
-                battleLog.append("Winner: ").append(card2.getName()).append("\n");
+            } else if (card2Damage > card1Damage) {
+                battleLog.append(card2.getName()).append(" wins the round!").append(System.lineSeparator());
                 deck1.remove(card1);
                 deck2.add(card1);
             } else {
-                battleLog.append("Draw!\n");
+                battleLog.append("It's a draw!\\n");
             }
+
             round++;
         }
 
-        if (deck1.isEmpty()) {
-            battleLog.append(player2.getName()).append(" wins the battle!\n");
-            userRepository.updateEloWin(player2.getUsername());
-            userRepository.updateWin(player2.getUsername());
-            userRepository.updateEloLoss(player1.getUsername());
-            userRepository.updateLoss(player1.getUsername());
-        } else if (deck2.isEmpty()) {
-            battleLog.append(player1.getName()).append(" wins the battle!\n");
-            userRepository.updateEloLoss(player2.getUsername());
-            userRepository.updateLoss(player2.getUsername());
-            userRepository.updateEloWin(player1.getUsername());
-            userRepository.updateWin(player1.getUsername());
+        if (deck1.isEmpty() && deck2.isEmpty()) {
+            battleLog.append("Battle ends in a draw! No cards left.\\n");
+        } else if (deck1.isEmpty()) {
+            battleLog.append(player2.getName()).append(" wins the battle!\\n");
+            updateELO(player2, player1);
         } else {
-            battleLog.append("The battle is a draw!\n");
+            battleLog.append(player1.getName()).append(" wins the battle!\\n");
+            updateELO(player1, player2);
         }
 
         return battleLog.toString();
     }
 
-    private static double calculateDamage(Card attacker, Card defender) {
-        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("MONSTER")) {
-            return attacker.getDamage(); // No elemental effect for monster vs monster
+    private double calculateEffectiveDamage(Card attacker, Card defender) {
+        if (attacker.getType().equals("Spell") && defender.getType().equals("Spell")) {
+            switch (attacker.getElement().name()) {
+                case "Water":
+                    if (defender.getElement().name().equals("Fire")) return attacker.getDamage() * 2;
+                    if (defender.getElement().name().equals("Normal")) return attacker.getDamage() / 2;
+                    break;
+                case "Fire":
+                    if (defender.getElement().name().equals("Normal")) return attacker.getDamage() * 2;
+                    if (defender.getElement().name().equals("Water")) return attacker.getDamage() / 2;
+                    break;
+                case "Normal":
+                    if (defender.getElement().name().equals("Water")) return attacker.getDamage() * 2;
+                    if (defender.getElement().name().equals("Fire")) return attacker.getDamage() / 2;
+                    break;
+            }
         }
 
-        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("SPELL")) {
-            return calculateElementalEffect(attacker, defender);
-        }
-
-        if (attacker.getType().name().equals("SPELL") && defender.getType().name().equals("SPELL")) {
-            return calculateElementalEffect(attacker, defender);
-        }
-
-        // Handle special rules
-        if (attacker.getName().equals("Goblin") && defender.getName().equals("Dragon")) {
-            return 0; // Goblin can't attack Dragon
-        }
-        if (attacker.getName().equals("Wizard") && defender.getName().equals("Ork")) {
-            return 0; // Wizard controls Ork
-        }
-        if (attacker.getType().name().equals("SPELL") && defender.getName().equals("Kraken")) {
-            return 0; // Kraken immune to spells
-        }
-        if (attacker.getType().name().equals("SPELL") && defender.getName().equals("Knight")) {
-            return Double.MAX_VALUE; // Knight drowned by water spell
-        }
-        if (attacker.getName().equals("FireElf") && defender.getName().equals("Dragon")) {
-            return 0; // FireElf evades Dragon
-        }
+        if (attacker.getName().equals("Kraken") && defender.getType().equals("Spell")) return attacker.getDamage();
+        if (attacker.getName().equals("FireElf") && defender.getName().equals("Dragon")) return attacker.getDamage();
+        if (attacker.getName().equals("Knight") && defender.getName().equals("WaterSpell")) return 0;
 
         return attacker.getDamage();
     }
 
-    private static double calculateElementalEffect(Card attacker, Card defender) {
-        String attackerElement = attacker.getType().name();
-        String defenderElement = defender.getType().name();
+    private void updateELO(User winner, User loser) {
+        winner.setElo(winner.getElo() + 3);
+        loser.setElo(loser.getElo() - 5);
 
-        if (attackerElement.equals("Water") && defenderElement.equals("Fire") ||
-                attackerElement.equals("Fire") && defenderElement.equals("Normal") ||
-                attackerElement.equals("Normal") && defenderElement.equals("Water")) {
-            return attacker.getDamage() * 2; // Effective
-        }
-
-        if (attackerElement.equals("Fire") && defenderElement.equals("Water") ||
-                attackerElement.equals("Normal") && defenderElement.equals("Fire") ||
-                attackerElement.equals("Water") && defenderElement.equals("Normal")) {
-            return attacker.getDamage() / 2; // Not effective
-        }
-
-        return attacker.getDamage(); // Neutral
+        userRepository.updateWin(winner.getUsername());
+        userRepository.updateEloWin(winner.getUsername());
+        userRepository.updateLoss(loser.getUsername());
+        userRepository.updateEloLoss(loser.getUsername());
     }
 }
-

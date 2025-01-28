@@ -27,6 +27,8 @@ public class User {
     private String bio;
     @JsonAlias({"Name"})
     private String name;
+    @JsonAlias({"Elo"})
+    private int elo;
 
 
     public User(String username, String password) {

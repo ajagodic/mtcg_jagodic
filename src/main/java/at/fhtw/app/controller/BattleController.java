@@ -1,7 +1,6 @@
 package at.fhtw.app.controller;
 
 import at.fhtw.app.model.User;
-import at.fhtw.app.persistence.repository.UserRepository;
 import at.fhtw.app.service.BattleService;
 import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
@@ -11,11 +10,11 @@ import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.httpserver.server.RestController;
 
-import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class BattleController implements RestController {
-    private final Queue<User> waitingPlayers = new LinkedList<>();
+    private final Queue<User> waitingPlayers = new ConcurrentLinkedQueue<>();
     private final UserService userService;
     private final BattleService battleService;
 
@@ -23,6 +22,7 @@ public class BattleController implements RestController {
         this.userService = userService;
         this.battleService = battleService;
     }
+
     @Override
     public Response handleRequest(Request request) {
         String path = request.getPathname();
@@ -34,45 +34,49 @@ public class BattleController implements RestController {
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
         } catch (Exception e) {
             e.printStackTrace();
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error\"}");
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error: " + e.getMessage() + "\"}");
         }
     }
+
     private Response handleBattle(Request request) {
-        // Die Anfrage-Parameter parsen
-        //String playerUsername = request.getQueryParam("player");
-        String playerUsername = request.getBody();
-        if (playerUsername == null) {
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"A player username must be specified\"}");
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Authorization token required\"}");
         }
 
-        // Spieler-Repository abrufen
-        User player = userService.findUserbyUsername(playerUsername);
+        String token = header.substring("Bearer ".length());
+        String username = token.split("-")[0];
+        User player = userService.findUserbyUsername(username);
         if (player == null) {
             return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\": \"Player not found\"}");
         }
 
-        // Überprüfen, ob der Spieler ein Deck konfiguriert hat
-        if (player.getDeck().isEmpty()) {
-            return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\": \"Player must have a configured deck to battle\"}");
-        }
+        /*if (player.getDeck() == null || player.getDeck().isEmpty()) {
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Player must have a configured deck to battle\"}");
+        }*/
 
         synchronized (waitingPlayers) {
             if (waitingPlayers.isEmpty()) {
-                // Kein Spieler wartet, diesen Spieler in die Warteschlange setzen
+                // Kein Gegner verfügbar → Spieler in Warteschlange setzen
                 waitingPlayers.add(player);
-                return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"Waiting for another player to join the battle\"}");
+                return new Response(HttpStatus.ACCEPTED, ContentType.JSON, "{\"message\": \"Waiting for another player to join the battle\"}");
             } else {
-                // Ein Spieler wartet bereits, Battle starten
-                User opponent = waitingPlayers.poll(); // Den wartenden Spieler aus der Warteschlange nehmen
+                // Gegner vorhanden → Battle starten
+                User opponent = waitingPlayers.poll();
+
+                // Sicherheitsprüfung: Falls der Gegner null ist, Fehler vermeiden
+                if (opponent == null) {
+                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Unexpected error: No opponent available\"}");
+                }
+
                 try {
                     String battleLog = battleService.startBattle(player, opponent);
                     return new Response(HttpStatus.OK, ContentType.JSON, "{\"battleLog\": \"" + battleLog.replace("\n", "\\n") + "\"}");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"An error occurred during the battle: " + e.getMessage() + "\"}");
+                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Error during battle: " + e.getMessage() + "\"}");
                 }
             }
         }
     }
-
 }

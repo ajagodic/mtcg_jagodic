@@ -1,6 +1,7 @@
 package at.fhtw;
 
 import at.fhtw.app.controller.*;
+import at.fhtw.app.service.BattleService;
 import at.fhtw.app.service.DeckService;
 import at.fhtw.app.service.PackageService;
 import at.fhtw.app.service.UserService;
@@ -30,6 +31,7 @@ public class Main {
         router.addService("/cards", new PackageController(new PackageService()));
         router.addService("/packages", new PackageController(new PackageService()));
         router.addService("/deck", new DeckController(new DeckService()));
+        router.addService("/battles", new BattleController(new UserService(),new BattleService(new DeckService())));
         return router;
     }
 }

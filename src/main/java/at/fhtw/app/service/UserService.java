@@ -37,7 +37,7 @@ public class UserService extends AbstractService {
         return true;
     }
     public String displayStats(String username){
-        if(!userRepository.checkUserExists(username)){
+        if(userRepository.checkUserExists(username)){
             return userRepository.showStats(username);
         }
         return "false";
@@ -46,7 +46,7 @@ public class UserService extends AbstractService {
         return userRepository.findByUsername(username);
     }
     public String getUSerData(String username){
-        if(!userRepository.checkUserExists(username)){
+        if(userRepository.checkUserExists(username)){
             return userRepository.getUserData(username);
         }
         return "false";
