@@ -19,20 +19,22 @@ public class DeckRepositoryImpl implements DeckRepository {
     }
 
     @Override
-    public List<Card> getDeckByUsername(String username) {
+    public List<Card> getDeckByUsername(String username, boolean isConfigured) {
         List<Card> deck = new ArrayList<>();
-        String sql = "SELECT id, name, damage, type, element FROM cards WHERE username = ? AND in_deck = true";
+        String sql = "SELECT id, name, damage, type, element FROM cards WHERE username = ? AND in_deck = ?";
 
         try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
             statement.setString(1, username);
+            statement.setBoolean(2, isConfigured);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Card card = new Card(
                         resultSet.getString("id"),
-                        resultSet.getString("name"),
-                        resultSet.getDouble("damage"));
-                        //Card.Type.valueOf(resultSet.getString("card")),
-                        //Card.Element.valueOf(resultSet.getString("element")));
+                        Card.CardName.valueOf(resultSet.getString("name")),
+                        resultSet.getDouble("damage"),
+                        Card.Type.valueOf(resultSet.getString("type")),
+                        Card.Element.valueOf(resultSet.getString("element"))
+                );
                 deck.add(card);
             }
         } catch (SQLException e) {
@@ -42,10 +44,12 @@ public class DeckRepositoryImpl implements DeckRepository {
     }
 
 
+
+
     @Override
     public void setDeckForUser(String username, List<String> cardIds) {
-        String sql = "UPDATE cards SET in_deck = true WHERE id = ? AND username = ?";
         String resetSql = "UPDATE cards SET in_deck = false WHERE username = ?";
+        String sql = "UPDATE cards SET in_deck = true WHERE id = ? AND username = ?";
 
         try {
             // Alle Karten des Benutzers zurücksetzen
@@ -60,7 +64,7 @@ public class DeckRepositoryImpl implements DeckRepository {
                     statement.setString(1, cardId);
                     statement.setString(2, username);
                     int rows = statement.executeUpdate();
-                    if(rows == 0){
+                    if (rows == 0) {
                         throw new DataAccessException("Card with id " + cardId + " was not found");
                     }
                 }
@@ -71,5 +75,6 @@ public class DeckRepositoryImpl implements DeckRepository {
             throw new DataAccessException("Error setting deck for user: " + username, e);
         }
     }
+
 
 }

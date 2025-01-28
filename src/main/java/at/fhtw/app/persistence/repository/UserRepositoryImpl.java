@@ -76,7 +76,7 @@ public class UserRepositoryImpl implements UserRepository {
             statement.setString(1, username);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") +  " Coins: " + rs.getString("coins") +  " Bio: " + rs.getString("bio") +  " Name: " + rs.getString("name")  ;
+                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") +  " Coins: " + rs.getString("coins") +  " Bio: " + rs.getString("bio") +  " Name: " + rs.getString("name \n")  ;
                 }
             }
             unitOfWork.commitTransaction(); // Transaktion bestätigen
@@ -104,21 +104,23 @@ public class UserRepositoryImpl implements UserRepository {
     //name
     @Override
     public boolean editUserData(User user) {
-        //String sql = "UPDATE users SET name = ? WHERE name = ?";
         String sql = "UPDATE users SET bio = ?, name = ?, image = ? WHERE username = ?";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, user.getBio());
             stmt.setString(2, user.getName());
             stmt.setString(3, user.getImage());
             stmt.setString(4, user.getUsername());
+
             int rowsUpdated = stmt.executeUpdate();
             unitOfWork.commitTransaction();
-            return true;
+
+            return rowsUpdated > 0; // Erfolgreich, wenn mindestens eine Zeile aktualisiert wurde
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
-            throw new DataAccessException("Error editing username", e);
+            throw new DataAccessException("Error updating user data for: " + user.getUsername(), e);
         }
     }
+
 
     //GET
     @Override
@@ -170,7 +172,7 @@ public class UserRepositoryImpl implements UserRepository {
         String sql = "INSERT INTO user_packages (username, package_id) VALUES (?, ?)";
         try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
             stmt.setString(1, username); // Benutzername setzen
-            stmt.setString(2, packageToAdd.getId());// Paket-ID setzen
+            stmt.setInt(2, packageToAdd.getId());// Paket-ID setzen
             stmt.executeUpdate(); // Eintrag in der Datenbank erstellen
             unitOfWork.commitTransaction();
         } catch (SQLException e) {

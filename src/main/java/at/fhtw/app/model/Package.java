@@ -9,13 +9,11 @@ import java.util.List;
 @Getter
 public class Package {
 
-    private String id;
-    private String name;
+    //private static int idCounter = 1;
+    private int id;
     private List<Card> cards;
 
-    public Package(String id, String name, List<Card> cards) {
-        this.id = id;
-        this.name = name;
+    public Package(List<Card> cards) {
         this.cards = cards;
     }
 

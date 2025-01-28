@@ -53,7 +53,7 @@ public class UserService extends AbstractService {
     }
 
     public boolean updateUserData(User user){
-        if(!userRepository.checkUserExists(user.getUsername())){
+        if(userRepository.checkUserExists(user.getUsername())){
             return userRepository.editUserData(user);
         }
         return false;

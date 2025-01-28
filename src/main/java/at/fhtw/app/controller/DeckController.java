@@ -2,6 +2,7 @@ package at.fhtw.app.controller;
 
 import at.fhtw.app.model.Card;
 import at.fhtw.app.service.DeckService;
+import at.fhtw.app.service.UserService;
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
 import at.fhtw.httpserver.server.HttpMethod;
@@ -42,41 +43,72 @@ public class DeckController implements RestController {
     }
 
     private Response handleGetDeck(Request request) {
-
-
         String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Authorization header is missing or invalid");
+        }
+
         String token = header.substring("Bearer ".length());
         String username = token.split("-")[0];
-        if (username == null) {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Missing Authorization\"}");
-        }
 
-        List<Card> deck = deckService.getDeckByUsername(username);
+        if (!UserService.checkAuth(username, token)) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Access token is missing or invalid");
+        }
 
         try {
-            String jsonResponse = objectMapper.writeValueAsString(deck);
-            return new Response(HttpStatus.OK, ContentType.JSON, jsonResponse);
-        } catch (JsonProcessingException e) {
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Error processing deck data\"}");
+            // Prüfen, ob es sich um ein konfiguriertes Deck handelt
+            List<Card> deck = deckService.getDeckByUsername(username, true); // `true` für konfigurierte Decks
+            if (deck.isEmpty()) {
+                return new Response(HttpStatus.OK, ContentType.JSON, "[]"); // Keine Karten im Deck
+            }
+
+            // JSON-Ausgabe erstellen
+            StringBuilder jsonResponse = new StringBuilder("[");
+            for (int i = 0; i < deck.size(); i++) {
+                Card card = deck.get(i);
+                jsonResponse.append(card.toString());
+                if (i < deck.size() - 1) {
+                    jsonResponse.append(", ");
+                }
+            }
+            jsonResponse.append("]");
+            return new Response(HttpStatus.OK, ContentType.JSON, jsonResponse.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Error fetching deck\"}");
         }
     }
+
 
     private Response handleSetDeck(Request request) {
-        String username = request.getHeader("Authorization"); // Username aus Header oder Token extrahieren
-        if (username == null) {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "{\"message\": \"Missing Authorization\"}");
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Authorization header is missing or invalid");
+        }
+
+        String token = header.substring("Bearer ".length());
+        String username = token.split("-")[0];
+
+        if (!UserService.checkAuth(username, token)) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Access token is missing or invalid");
         }
 
         try {
-            List<String> cardIds = objectMapper.readValue(request.getBody(), List.class);
-            if(deckService.setDeckForUser(username, cardIds)) {
-                return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"Deck successfully updated\"}");
+            // Karten-IDs aus dem Request-Body lesen
+            List<String> cardIds = objectMapper.readValue(request.getBody(), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
+
+            // Validieren, dass genau 4 Karten übergeben wurden
+            if (cardIds.size() != 4) {
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Deck must contain exactly 4 cards\"}");
             }
-        } catch (JsonProcessingException e) {
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid JSON format\"}");
-        } catch (IllegalArgumentException e) {
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"" + e.getMessage() + "\"}");
+
+            // Deck konfigurieren
+            deckService.setDeckForUser(username, cardIds);
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"Deck successfully configured\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Error setting deck\"}");
         }
-        return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error\"}");
     }
+
 }

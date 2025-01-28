@@ -90,6 +90,9 @@ public class Request {
     }
 
     public String getBody() {
+        if (this.body == null) {
+            return "";
+        }
         return body;
     }
 

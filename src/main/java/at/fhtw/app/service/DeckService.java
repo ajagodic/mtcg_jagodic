@@ -14,15 +14,12 @@ public class DeckService {
         this.deckRepository = new DeckRepositoryImpl(new UnitOfWork());
     }
 
-    public List<Card> getDeckByUsername(String username) {
-        return deckRepository.getDeckByUsername(username);
+    public List<Card> getDeckByUsername(String username, boolean isConfigured) {
+        return deckRepository.getDeckByUsername(username, isConfigured);
     }
 
-    public boolean setDeckForUser(String username, List<String> cardIds) {
-        if (cardIds == null || cardIds.size() != 4) {
-            throw new IllegalArgumentException("A deck must contain exactly 4 cards.");
-        }
+    public void setDeckForUser(String username, List<String> cardIds) {
         deckRepository.setDeckForUser(username, cardIds);
-        return true;
     }
+
 }

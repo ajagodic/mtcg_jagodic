@@ -48,14 +48,35 @@ public class UserController implements RestController {
         }
     }
     private Response handleUserUpdate(Request request) throws JsonProcessingException {
-        User user = new ObjectMapper().readValue(request.getBody(), User.class);
-        boolean success = userService.editUser(user);
-        if (success) {
-            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
-        } else {
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"User already exists\"}");
+        // Header und Token überprüfen
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Authorization header is missing or invalid");
+        }
+
+        String token = header.substring("Bearer ".length());
+        String username = token.split("-")[0];
+
+        if (!UserService.checkAuth(username, token)) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Access token is missing or invalid");
+        }
+
+        // Request-Body verarbeiten und User-Daten updaten
+        try {
+            User userUpdate = new ObjectMapper().readValue(request.getBody(), User.class);
+            userUpdate.setUsername(username); // Username aus dem Token setzen, um sicherzustellen, dass der Benutzer nur sich selbst bearbeitet
+            boolean success = userService.updateUserData(userUpdate);
+            if (success) {
+                return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"User updated successfully\"}");
+            } else {
+                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\": \"User not found or no changes made\"}");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Error updating user data\"}");
         }
     }
+
 
     private Response handleGetUserData(Request request) throws JsonProcessingException {
         String[] pathSegments = request.getPathname().split("/");
