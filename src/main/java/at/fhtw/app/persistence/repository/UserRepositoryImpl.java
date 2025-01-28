@@ -8,6 +8,8 @@ import at.fhtw.app.persistence.UnitOfWork;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserRepositoryImpl implements UserRepository {
     private UnitOfWork unitOfWork;
@@ -18,38 +20,48 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User findByUsername(String username) {
-        String sql = "UPDATE users SET token = ? WHERE username = ?";
-        String sql2 = "SELECT * FROM users WHERE username = ?";
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Error: Username cannot be empty or null.");
+        }
 
-        try (PreparedStatement statement = unitOfWork.prepareStatement(sql)) {
-            statement.setString(1, username + "-mtcgToken");
-            statement.setString(2, username);
-            int rowsUpdated = statement.executeUpdate();
-            if (rowsUpdated > 0) {
-                System.out.println("Token erfolgreich aktualisiert.");
-            } else {
-                System.out.println("Kein Benutzer mit dem angegebenen Username gefunden.");
+        // Schritt 1: Token aktualisieren
+        String sqlUpdateToken = "UPDATE users SET token = ? WHERE username = ?";
+        try (PreparedStatement updateStmt = unitOfWork.prepareStatement(sqlUpdateToken)) {
+            updateStmt.setString(1, username + "-mtcgToken");
+            updateStmt.setString(2, username);
+            int rowsUpdated = updateStmt.executeUpdate();
+
+            if (rowsUpdated == 0) {
+                unitOfWork.rollbackTransaction(); // Rollback bei Fehler
+                return null; // Benutzer nicht gefunden
             }
             unitOfWork.commitTransaction(); // Transaktion bestätigen
         } catch (SQLException e) {
-            unitOfWork.rollbackTransaction(); // Transaktion bei Fehler zurückrollen
-            e.printStackTrace();
+            unitOfWork.rollbackTransaction();
+            throw new RuntimeException("Error updating token for user: " + username, e);
         }
-        try (PreparedStatement statement = unitOfWork.prepareStatement(sql2)) {
-            statement.setString(1, username);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                User user = new User(
-                        resultSet.getString("username"),
-                        resultSet.getString("password"));
-                return user;
+
+        // Schritt 2: Benutzer abrufen
+        String sqlSelectUser = "SELECT username, password FROM users WHERE username = ?";
+        try (PreparedStatement selectStmt = unitOfWork.prepareStatement(sqlSelectUser)) {
+            selectStmt.setString(1, username);
+            try (ResultSet resultSet = selectStmt.executeQuery()) {
+                if (resultSet.next()) {
+                    return new User(
+                            resultSet.getString("username"),
+                            resultSet.getString("password")
+                    );
+                }
             }
-            unitOfWork.commitTransaction();
+            unitOfWork.commitTransaction(); // Transaktion bestätigen
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
+            throw new RuntimeException("Error fetching user by username: " + username, e);
         }
-        return null;
+
+        return null; // Benutzer nicht gefunden
     }
+
 
     @Override
     public boolean checkUserExists(String username) {
@@ -78,7 +90,7 @@ public class UserRepositoryImpl implements UserRepository {
             statement.setString(1, username);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") + " Coins: " + rs.getString("coins") + " Bio: " + rs.getString("bio") + " Name: " + rs.getString("name \n");
+                    return "ELO: " + rs.getInt("elo") + " Wins: " + rs.getString("wins") + " Losses: " + rs.getString("losses") + " Coins: " + rs.getString("coins") + " Bio: " + rs.getString("bio") + " Name: " + rs.getString("name");
                 }
             }
             unitOfWork.commitTransaction(); // Transaktion bestätigen
@@ -236,6 +248,30 @@ public class UserRepositoryImpl implements UserRepository {
             unitOfWork.rollbackTransaction();
             throw new RuntimeException("Error updating coins for winner and loser: " + e.getMessage(), e);
         }
+    }
+    @Override
+    public List<String> displayScoreboard() throws Exception {
+        String sql = "SELECT username, elo, coins, wins, losses " +
+                "FROM users " +
+                "ORDER BY elo DESC";
+        List<String> scoreboard = new ArrayList<>();
+        try (PreparedStatement stmt = unitOfWork.prepareStatement(sql)) {
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    scoreboard.add(String.format(
+                            "%s | ELO: %d | Coins: %d | Won: %d | Lost: %d",
+                            rs.getString("username"),
+                            rs.getInt("elo"),
+                            rs.getInt("coins"),
+                            rs.getInt("wins"),
+                            rs.getInt("losses")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error fetching scoreboard", e);
+        }
+        return scoreboard;
     }
 
 

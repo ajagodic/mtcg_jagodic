@@ -25,6 +25,7 @@ public class Main {
     {
         Router router = new Router();
         router.addService("/users", new UserController(new UserService()));
+        router.addService("/scoreboard", new UserController(new UserService()));
         router.addService("/sessions", new LoginController(new UserService()));
         router.addService("/stats", new StatsController(new UserService()));
         router.addService("/transactions", new PackageController(new PackageService()));

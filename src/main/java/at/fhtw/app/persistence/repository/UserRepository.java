@@ -3,6 +3,8 @@ package at.fhtw.app.persistence.repository;
 import at.fhtw.app.model.User;
 import at.fhtw.app.model.Package;
 
+import java.util.List;
+
 // UserRepository.java
 public interface UserRepository {
     User findByUsername(String username);
@@ -17,5 +19,6 @@ public interface UserRepository {
     boolean checkUserExists(String username);
     String getUserData(String username);
     void uniqueFeature(String winner, String loser);
+    List<String> displayScoreboard() throws Exception;
 }
 

@@ -4,7 +4,10 @@ import at.fhtw.app.persistence.DataAccessException;
 import at.fhtw.app.persistence.UnitOfWork;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StatsRepositoryImpl implements StatsRepository {
     private final UnitOfWork unitOfWork;
@@ -25,4 +28,8 @@ public class StatsRepositoryImpl implements StatsRepository {
             throw new DataAccessException("Error assigning package to user: " + username, e);
         }
     }
+
+
+
+
 }

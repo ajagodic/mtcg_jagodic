@@ -11,6 +11,8 @@ import at.fhtw.httpserver.server.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 public class UserController implements RestController {
     private final UserService userService;
 
@@ -29,6 +31,8 @@ public class UserController implements RestController {
                 return handleGetUserData(request);
             } else if (path.startsWith("/users") && method == HttpMethod.PUT) {
                 return handleUserUpdate(request);
+            } else if (path.startsWith("/scoreboard") && method == HttpMethod.GET){
+                return handleDisplayScoreboard(request);
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -94,6 +98,23 @@ public class UserController implements RestController {
             return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"User registered successfully\"}");
         } else {
             return new Response(HttpStatus.CONFLICT, ContentType.JSON, "{\"message\": \"User already exists\"}");
+        }
+    }
+    private Response handleDisplayScoreboard(Request request) throws JsonProcessingException {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Authorization header is missing or invalid");
+        }
+        String token = header.substring("Bearer ".length());
+        String username = token.split("-")[0];
+        if (!UserService.checkAuth(username, token)) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.JSON, "Access token is missing or invalid");
+        }
+        String scoreboard = userService.showScoreboard();
+        if (scoreboard!=null) {
+            return new Response(HttpStatus.OK, ContentType.JSON, "{\"Hier sind die Userdaten\":" + scoreboard);
+        } else {
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"No userdata\"}");
         }
     }
 }

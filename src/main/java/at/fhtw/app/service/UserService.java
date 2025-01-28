@@ -5,6 +5,8 @@ import at.fhtw.app.persistence.UnitOfWork;
 import at.fhtw.app.persistence.repository.UserRepository;
 import at.fhtw.app.persistence.repository.UserRepositoryImpl;
 
+import java.util.List;
+
 public class UserService extends AbstractService {
 
     private UserRepository userRepository = new UserRepositoryImpl(new UnitOfWork());
@@ -14,20 +16,30 @@ public class UserService extends AbstractService {
     }
 
     public  boolean  registerUser(User user) {
-        if(userRepository.findByUsername(user.getUsername()) != null){
+        if(userRepository.checkUserExists(user.getUsername())) {
             return false;
         }
         userRepository.saveUser(user);
         return true;
     }
     public String loginUser(String username, String password) {
-        User user = userRepository.findByUsername(username);
-        if (user!= null && user.getPassword().equals(password)) {
-            String token = username + "-mtcgToken"; // Generiere Token
-            return token;
+        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Error: Username and password cannot be empty or null.");
         }
-        return null; // Login fehlgeschlagen
+
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (!user.getPassword().equals(password)) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        // Generiere Token
+        return username + "-mtcgToken";
     }
+
     public boolean editUser(User user) {
         if (user == null) {
             return false;
@@ -58,7 +70,21 @@ public class UserService extends AbstractService {
         }
         return false;
     }
-    public void updateEloWin(User user){
+
+    public String showScoreboard() {
+        List<String> scoreboard = null;
+        try {
+            scoreboard = userRepository.displayScoreboard();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        StringBuilder result = new StringBuilder();
+        for (String entry : scoreboard) {
+            result.append(entry).append(System.lineSeparator());
+        }
+        return result.toString();
+    }
+    /*public void updateEloWin(User user){
         if(userRepository.findByUsername(user.getUsername()) != null){
             userRepository.updateEloWin(user.getUsername());
         }
@@ -67,7 +93,7 @@ public class UserService extends AbstractService {
         if(userRepository.findByUsername(user.getUsername()) != null){
             userRepository.updateEloLoss(user.getUsername());
         }
-    }
+    }*/
 
     public static boolean checkAuth(String username, String token) {
         if (token == null || !token.startsWith(username)) {
@@ -76,12 +102,12 @@ public class UserService extends AbstractService {
         return true;
     }
 
-    public boolean isAdmin(String token) {
+    /*public boolean isAdmin(String token) {
         if (token == null || !token.startsWith("Bearer ")) {
             return false;
         }
         return token.equals("Bearer %s-mtcgToken".formatted("admin"));
-    }
+    }*/
 
 
 }
