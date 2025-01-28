@@ -27,7 +27,7 @@ public class LoginController extends AbstractService implements RestController {
             try {
                 User user = this.getObjectMapper().readValue(request.getBody(), User.class);
                 String token = userService.loginUser(user.getUsername(),user.getPassword());
-                return new Response(HttpStatus.ACCEPTED, ContentType.JSON, "{\"Token\": \"%s\"}"+token);
+                return new Response(HttpStatus.ACCEPTED, ContentType.JSON, "{\"Token\": "+token+"}");
             } catch (JsonProcessingException e) {
                 return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid JSON format\"}");
             }

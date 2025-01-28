@@ -42,6 +42,8 @@ public class DeckController implements RestController {
     }
 
     private Response handleGetDeck(Request request) {
+
+
         String header = request.getHeader("Authorization");
         String token = header.substring("Bearer ".length());
         String username = token.split("-")[0];
@@ -67,12 +69,14 @@ public class DeckController implements RestController {
 
         try {
             List<String> cardIds = objectMapper.readValue(request.getBody(), List.class);
-            deckService.setDeckForUser(username, cardIds);
-            return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"Deck successfully updated\"}");
+            if(deckService.setDeckForUser(username, cardIds)) {
+                return new Response(HttpStatus.OK, ContentType.JSON, "{\"message\": \"Deck successfully updated\"}");
+            }
         } catch (JsonProcessingException e) {
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid JSON format\"}");
         } catch (IllegalArgumentException e) {
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"" + e.getMessage() + "\"}");
         }
+        return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error\"}");
     }
 }

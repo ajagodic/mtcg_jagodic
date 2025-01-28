@@ -30,9 +30,9 @@ public class DeckRepositoryImpl implements DeckRepository {
                 Card card = new Card(
                         resultSet.getString("id"),
                         resultSet.getString("name"),
-                        resultSet.getDouble("damage"),
-                        Card.Type.valueOf(resultSet.getString("card")),
-                        Card.Element.valueOf(resultSet.getString("element")));
+                        resultSet.getDouble("damage"));
+                        //Card.Type.valueOf(resultSet.getString("card")),
+                        //Card.Element.valueOf(resultSet.getString("element")));
                 deck.add(card);
             }
         } catch (SQLException e) {
@@ -59,10 +59,13 @@ public class DeckRepositoryImpl implements DeckRepository {
                 for (String cardId : cardIds) {
                     statement.setString(1, cardId);
                     statement.setString(2, username);
-                    statement.executeUpdate();
+                    int rows = statement.executeUpdate();
+                    if(rows == 0){
+                        throw new DataAccessException("Card with id " + cardId + " was not found");
+                    }
                 }
+                unitOfWork.commitTransaction();
             }
-            unitOfWork.commitTransaction();
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
             throw new DataAccessException("Error setting deck for user: " + username, e);

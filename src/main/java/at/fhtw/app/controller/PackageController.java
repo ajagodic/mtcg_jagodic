@@ -27,12 +27,13 @@ public class PackageController implements RestController {
         HttpMethod method = request.getMethod();
 
         try {
-            if (path.equals("/packages") && method == HttpMethod.POST) {
+            if ("/packages".equals(path) && method == HttpMethod.POST) {
                 return handleAddPackage(request);
-            } else if (path.equals("/packages") && method == HttpMethod.GET) {
+            } else if ("/packages".equals(path) && method == HttpMethod.GET) {
                 return handleBuyPackage(request);
             }
             return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "{\"message\": \"Invalid request\"}");
+
         } catch (Exception e) {
             e.printStackTrace();
             return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "{\"message\": \"Server error\"}");
@@ -49,6 +50,11 @@ public class PackageController implements RestController {
             }
             try {
                 Package pkg = objectMapper.readValue(request.getBody(), Package.class);
+                System.out.println(pkg.getName());
+                if (pkg == null) {
+                    return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{\"message\": \"No packages available\"}");
+                }
+
                 packageService.addPackage(pkg);
                 return new Response(HttpStatus.CREATED, ContentType.JSON, "{\"message\": \"Package successfully added\"}");
             } catch (Exception e) {

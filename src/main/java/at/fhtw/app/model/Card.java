@@ -42,6 +42,14 @@ public class Card {
         this.element = element;
     }
 
+    public Card(String id, String name, double damage){
+        this.id = id;
+        this.name = name;
+        this.damage = damage;
+        type = null;
+        element = null;
+    }
+
 
     @Override
     public String toString() {

@@ -20,10 +20,6 @@ public class UserController implements RestController {
 
     @Override
     public Response handleRequest(Request request) {
-        /*System.out.println("Request Path: " + request.getPathname());
-        System.out.println("HTTP Method: " + request.getMethod());
-        System.out.println("Request Body: " + request.getBody());
-        System.out.println("Request Headers: " + request.getHeaderMap().toString());*/
         String path = request.getPathname();
         HttpMethod method = request.getMethod();
         try {

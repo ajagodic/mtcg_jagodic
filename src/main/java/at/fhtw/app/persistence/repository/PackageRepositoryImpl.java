@@ -44,7 +44,6 @@ public class PackageRepositoryImpl implements PackageRepository {
                     cardStmt.executeUpdate();
                 }
             }
-
             unitOfWork.commitTransaction();
         } catch (SQLException e) {
             unitOfWork.rollbackTransaction();
