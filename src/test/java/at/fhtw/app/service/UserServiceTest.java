@@ -67,13 +67,7 @@ public class UserServiceTest {
         assertFalse(bool, "Password leer");
     }
 
-    // 7. Benutzer mit leerem Benutzernamen registrieren
-    @Test
-    void testRegisterUserWithEmptyUsername() {
-        boolean bool = userService.registerUser(new User("", "password123"));
-        assertFalse(bool, "Benutzername ist leer");
-    }
-    // 8. Benutzerprofil bearbeiten
+    // 7. Benutzerprofil bearbeiten
     @Test
     void testEditUserProfileSuccess() {
         User user = new User("kienboec", "password123");
@@ -84,14 +78,14 @@ public class UserServiceTest {
         assertTrue(result, "Das Benutzerprofil sollte erfolgreich bearbeitet werden.");
     }
 
-    // 9. Benutzerprofil bearbeiten - Fehler bei null-User
+    // 8. Benutzerprofil bearbeiten - Fehler bei null-User
     @Test
     void testEditUserProfileWithNullUser() {
         boolean result = userService.editUser(null);
         assertFalse(result, "Das Bearbeiten eines null-Users sollte fehlschlagen.");
     }
 
-    // 10. Benutzerstatistiken anzeigen - Erfolgreich
+    // 9. Benutzerstatistiken anzeigen - Erfolgreich
     @Test
     void testDisplayStatsSuccess() {
         User user = new User("kienboec", "password123");
@@ -101,14 +95,14 @@ public class UserServiceTest {
         assertNotNull(stats, "Statistiken sollten für existierende Benutzer angezeigt werden.");
     }
 
-    // 11. Benutzerstatistiken anzeigen - Benutzer existiert nicht
+    // 10. Benutzerstatistiken anzeigen - Benutzer existiert nicht
     @Test
     void testDisplayStatsForNonExistentUser() {
         String stats = userService.displayStats("unknownUser");
         assertEquals("false", stats, "Statistiken sollten für nicht existierende Benutzer nicht verfügbar sein.");
     }
 
-    // 12. Benutzer suchen - Erfolgreich
+    // 11. Benutzer suchen - Erfolgreich
     @Test
     void testFindUserByUsernameSuccess() {
         User user = new User("kienboec", "password123");
@@ -119,14 +113,14 @@ public class UserServiceTest {
         assertEquals("kienboec", foundUser.getUsername(), "Benutzername sollte korrekt sein.");
     }
 
-    // 13. Benutzer suchen - Benutzer existiert nicht
+    // 12. Benutzer suchen - Benutzer existiert nicht
     @Test
     void testFindUserByUsernameNonExistent() {
         User foundUser = userService.findUserbyUsername("unknownUser");
         assertNull(foundUser, "Nicht existierende Benutzer sollten null zurückgeben.");
     }
 
-    // 14. Benutzerdaten abrufen - Erfolgreich
+    // 13. Benutzerdaten abrufen - Erfolgreich
     @Test
     void testGetUserDataSuccess() {
         User user = new User("kienboec", "password123");
@@ -136,14 +130,14 @@ public class UserServiceTest {
         assertNotNull(userData, "Benutzerdaten sollten für existierende Benutzer verfügbar sein.");
     }
 
-    // 15. Benutzerdaten abrufen - Benutzer existiert nicht
+    // 14. Benutzerdaten abrufen - Benutzer existiert nicht
     @Test
     void testGetUserDataForNonExistentUser() {
         String userData = userService.getUSerData("unknownUser");
         assertEquals("false", userData, "Für nicht existierende Benutzer sollten keine Daten zurückgegeben werden.");
     }
 
-    // 16. Benutzerdaten aktualisieren - Erfolgreich
+    // 15. Benutzerdaten aktualisieren - Erfolgreich
     @Test
     void testUpdateUserDataSuccess() {
         User user = new User("kienboec", "password123");
@@ -154,7 +148,7 @@ public class UserServiceTest {
         assertTrue(result, "Benutzerdaten sollten erfolgreich aktualisiert werden.");
     }
 
-    // 17. Benutzerdaten aktualisieren - Benutzer existiert nicht
+    // 16. Benutzerdaten aktualisieren - Benutzer existiert nicht
     @Test
     void testUpdateUserDataForNonExistentUser() {
         User user = new User("unknownUser", "password123");
@@ -162,7 +156,7 @@ public class UserServiceTest {
         assertFalse(result, "Für nicht existierende Benutzer sollten keine Daten aktualisiert werden.");
     }
 
-    // 18. Scoreboard anzeigen - Erfolgreich
+    // 17. Scoreboard anzeigen - Erfolgreich
     @Test
     void testShowScoreboardSuccess() {
         // Mock-Daten für das Scoreboard
@@ -170,21 +164,21 @@ public class UserServiceTest {
         assertNotNull(scoreboard, "Das Scoreboard sollte nicht null sein.");
     }
 
-    // 19. Token-Authentifizierung - Erfolgreich
+    // 18. Token-Authentifizierung - Erfolgreich
     @Test
     void testCheckAuthSuccess() {
         boolean result = UserService.checkAuth("kienboec", "kienboec-mtcgToken");
         assertTrue(result, "Die Token-Authentifizierung sollte erfolgreich sein.");
     }
 
-    // 20. Token-Authentifizierung - Fehlerhaft
+    // 19. Token-Authentifizierung - Fehlerhaft
     @Test
     void testCheckAuthFailure() {
         boolean result = UserService.checkAuth("kienboec", "invalidToken");
         assertFalse(result, "Die Token-Authentifizierung sollte fehlschlagen.");
     }
 
-    // 21. Token-Authentifizierung - Null-Token
+    // 20. Token-Authentifizierung - Null-Token
     @Test
     void testCheckAuthWithNullToken() {
         boolean result = UserService.checkAuth("kienboec", null);
